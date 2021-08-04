@@ -1,9 +1,10 @@
 package com.mattsmeets.macrokey.gui;
 
-import com.mattsmeets.macrokey.event.MacroEvent;
 import com.mattsmeets.macrokey.gui.fragment.MacroListFragment;
-import com.mattsmeets.macrokey.model.LayerInterface;
-import com.mattsmeets.macrokey.model.MacroInterface;
+import com.mattsmeets.macrokey.model.Layer;
+import com.mattsmeets.macrokey.model.Macro;
+import com.mattsmeets.macrokey.MacroKey;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -15,7 +16,7 @@ import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
 
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
@@ -30,7 +31,7 @@ public class GuiMacroManagement extends GuiScreen {
             layerSwitcherButtonText = I18n.format("gui.manage.text.layer.switch");
     private final String
             doneText = I18n.format("gui.done");
-    public MacroInterface macroModify;
+    public Macro macroModify;
     private MacroListFragment macroListFragment;
     private GuiButton
             buttonDone,
@@ -39,7 +40,7 @@ public class GuiMacroManagement extends GuiScreen {
             layerSwitcher;
 
     private int currentSelectedLayer;
-    private List<LayerInterface> layers;
+    private ArrayList<Layer> layers;
 
     private volatile boolean updateList = false;
 
@@ -116,19 +117,22 @@ public class GuiMacroManagement extends GuiScreen {
         }
 
         try {
-            this.layers = instance.modState.getLayers(true);
+            this.layers = instance.bindingsRepository.getLayers(true);
 
-            LayerInterface currentLayer =
-                    currentSelectedLayer == -1 ? null : this.layers.get(currentSelectedLayer);
+            Layer currentLayer;
+            if(currentSelectedLayer == -1 || currentSelectedLayer >= this.layers.size()) {
+                currentSelectedLayer = -1;
+                currentLayer = null;
+            } else {
+                currentLayer = this.layers.get(currentSelectedLayer);
+            }
 
-            this.macroListFragment = new MacroListFragment(this, currentLayer);
+            this.macroListFragment = new MacroListFragment(this, currentLayer == null ? null : currentLayer.ulid);
 
             this.layerSwitcher.displayString =
                     I18n.format("text.layer.display",
-                            currentLayer == null ? this.layerMasterText : currentLayer.getDisplayName()
+                            currentLayer == null ? this.layerMasterText : currentLayer.displayName
                     );
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             this.updateList = false;
         }
@@ -142,15 +146,15 @@ public class GuiMacroManagement extends GuiScreen {
             return;
         }
 
+        int newCode = -1;
         if (keyCode == Keyboard.KEY_ESCAPE) {
-            this.macroModify.setKeyCode(0);
+            newCode = 0;
         } else if (keyCode != 0) {
-            this.macroModify.setKeyCode(keyCode);
+            newCode = keyCode;
         } else if (typedChar > 0) {
-            this.macroModify.setKeyCode(typedChar + 256);
+            newCode = typedChar + 256;
         }
-
-        MinecraftForge.EVENT_BUS.post(new MacroEvent.MacroChangedEvent(this.macroModify));
+        if(newCode != -1) MacroKey.instance.bindingsRepository.changeMacroKeyCode(this.macroModify, newCode, true);
 
         this.macroModify = null;
     }

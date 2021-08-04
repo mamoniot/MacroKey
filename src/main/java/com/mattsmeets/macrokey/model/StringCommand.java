@@ -6,20 +6,19 @@ import net.minecraft.client.entity.EntityPlayerSP;
 /**
  * Old vanilla macrokey command execution
  */
-public class StringCommand extends AbstractCommand implements CommandInterface {
+public class StringCommand {
 
     /**
      * Command to execute
      */
-    private final String command;
+    public final String command;
 
     public StringCommand(String command) {
-        super("string");
 
         this.command = command;
     }
 
-    @Override
+
     public void execute(EntityPlayerSP player) {
         // send command or text to server. For the time being it is
         // not possible to execute client-only commands. Tested and its
@@ -28,7 +27,6 @@ public class StringCommand extends AbstractCommand implements CommandInterface {
         player.sendChatMessage(command);
     }
 
-    @Override
     public String toString() {
         return command;
     }

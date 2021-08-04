@@ -2,7 +2,7 @@ package com.mattsmeets.macrokey.gui.fragment;
 
 import com.mattsmeets.macrokey.gui.GuiLayerManagement;
 import com.mattsmeets.macrokey.gui.GuiModifyLayer;
-import com.mattsmeets.macrokey.model.LayerInterface;
+import com.mattsmeets.macrokey.model.Layer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiListExtended;
 import net.minecraft.client.resources.I18n;
@@ -10,6 +10,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.List;
 
 import static com.mattsmeets.macrokey.MacroKey.instance;
@@ -20,17 +21,17 @@ public class LayerListFragment extends GuiListExtended {
 
     private final GuiListExtended.IGuiListEntry[] listEntries;
 
-    public LayerListFragment(GuiLayerManagement guiLayerManagement) throws IOException {
+    public LayerListFragment(GuiLayerManagement guiLayerManagement) {
         super(guiLayerManagement.mc, guiLayerManagement.width + 45, guiLayerManagement.height, 63, guiLayerManagement.height - 32, 20);
 
         this.guiLayerManagement = guiLayerManagement;
 
-        List<LayerInterface> layers = instance.modState.getLayers(true);
+        List<Layer> layers = instance.bindingsRepository.getLayers(true);
 
         this.listEntries = new GuiListExtended.IGuiListEntry[layers.size()];
 
         for (int i = 0; i < layers.size(); i++) {
-            LayerInterface layer = layers.get(i);
+            Layer layer = layers.get(i);
 
             this.listEntries[i] = new LayerListFragment.KeyEntry(layer);
         }
@@ -49,7 +50,7 @@ public class LayerListFragment extends GuiListExtended {
 
     @SideOnly(Side.CLIENT)
     public class KeyEntry implements GuiListExtended.IGuiListEntry {
-        private final LayerInterface layer;
+        private final Layer layer;
 
         private final String keyDesc;
 
@@ -63,12 +64,12 @@ public class LayerListFragment extends GuiListExtended {
 
         private boolean deleted = false;
 
-        private KeyEntry(LayerInterface layer) {
+        private KeyEntry(Layer layer) {
             this.layer = layer;
-            this.keyDesc = layer.getDisplayName();
+            this.keyDesc = layer.displayName;
 
             this.btnRemove = new GuiButton(1, 0, 0, 15, 20, this.removeLayerText);
-            this.btnEdit = new GuiButton(2, 0, 0, 60, 20, this.editLayerText);
+            this.btnEdit = new GuiButton(2, 0, 0, 59, 20, this.editLayerText);
         }
 
         @Override
@@ -77,7 +78,7 @@ public class LayerListFragment extends GuiListExtended {
                 return;
             }
 
-            mc.fontRenderer.drawString(this.keyDesc, x + 90 - mc.fontRenderer.getStringWidth(layer.getDisplayName()), y + slotHeight / 2 - mc.fontRenderer.FONT_HEIGHT / 2, 16777215);
+            mc.fontRenderer.drawString(this.keyDesc, x + 90 - mc.fontRenderer.getStringWidth(layer.displayName), y + slotHeight / 2 - mc.fontRenderer.FONT_HEIGHT / 2, 16777215);
 
             this.btnEdit.x = x + 140;
             this.btnEdit.y = y;
@@ -101,14 +102,12 @@ public class LayerListFragment extends GuiListExtended {
 
             if (this.btnRemove.mousePressed(mc, mouseX, mouseY)) {
                 try {
-                    if (this.layer.equals(instance.modState.getActiveLayer()))
-                        instance.modState.setActiveLayer(null);
+                    if (this.layer.equals(instance.bindingsRepository.getActiveLayer(false)))
+                        instance.bindingsRepository.setActiveLayer((UUID)null, true);
 
-                    instance.bindingsRepository.deleteLayer(this.layer, true);
+                    instance.bindingsRepository.deleteLayer(this.layer.ulid, true);
 
                     this.deleted = true;
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } finally {
                     mc.displayGuiScreen(guiLayerManagement);
                 }

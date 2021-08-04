@@ -15,7 +15,7 @@ public class ModConfig {
     public static int repeatDelay = 20;
 
     @Config.Comment("What file should be used for saving the bindings and various other dynamic information (default: bindings.json)")
-    public static String bindingFile = "bindings.json";
+    public static String bindingFile = "bindings.dat";
 
     @Config.Comment("Customize the ID that is used when calling the macro management GUI (default: 423458971)")
     public static int guiMacroManagementId = 423458971;

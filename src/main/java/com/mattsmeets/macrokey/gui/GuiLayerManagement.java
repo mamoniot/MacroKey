@@ -54,11 +54,7 @@ public class GuiLayerManagement extends GuiScreen {
         this.buttonList.add(buttonDone = new GuiButton(0, this.width / 2 - 155, this.height - 29, 150, 20, this.doneText));
         this.buttonList.add(buttonAdd = new GuiButton(1, this.width / 2 - 155 + 160, this.height - 29, 150, 20, this.addLayerButtonText));
 
-        try {
-            this.layerListFragment = new LayerListFragment(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.layerListFragment = new LayerListFragment(this);
     }
 
     @Override

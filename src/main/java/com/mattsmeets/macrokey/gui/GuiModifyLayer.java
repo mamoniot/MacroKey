@@ -1,8 +1,8 @@
 package com.mattsmeets.macrokey.gui;
 
-import com.mattsmeets.macrokey.event.LayerEvent;
 import com.mattsmeets.macrokey.model.Layer;
-import com.mattsmeets.macrokey.model.LayerInterface;
+import com.mattsmeets.macrokey.MacroKey;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -14,7 +14,7 @@ import java.io.IOException;
 public class GuiModifyLayer extends GuiScreen {
 
     private final GuiScreen parentScreen;
-    private final LayerInterface result;
+    private final Layer result;
 
     private final String
             defaultScreenTitleText = I18n.format("gui.modify.layer.text.title.new"),
@@ -30,7 +30,7 @@ public class GuiModifyLayer extends GuiScreen {
 
     private boolean existing;
 
-    public GuiModifyLayer(GuiScreen guiScreen, LayerInterface layer) {
+    public GuiModifyLayer(GuiScreen guiScreen, Layer layer) {
         this.parentScreen = guiScreen;
         this.result = layer == null ? new Layer() : layer;
         this.existing = layer != null;
@@ -69,7 +69,7 @@ public class GuiModifyLayer extends GuiScreen {
         this.textFieldName.setMaxStringLength(20);
 
         if (existing) {
-            textFieldName.setText(result.getDisplayName());
+            textFieldName.setText(result.displayName);
         }
     }
 
@@ -83,12 +83,10 @@ public class GuiModifyLayer extends GuiScreen {
                     break;
                 }
 
-                this.result.setDisplayName(this.textFieldName.getText());
+                this.result.displayName = this.textFieldName.getText();
 
-                if (this.existing) {
-                    MinecraftForge.EVENT_BUS.post(new LayerEvent.LayerChangedEvent(this.result));
-                } else {
-                    MinecraftForge.EVENT_BUS.post(new LayerEvent.LayerAddedEvent(this.result));
+                if (!this.existing) {
+                    MacroKey.instance.bindingsRepository.addLayer(this.result, true);
                 }
             case 1:
                 this.mc.displayGuiScreen(parentScreen);

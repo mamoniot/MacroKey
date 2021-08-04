@@ -26,10 +26,17 @@ gui.modify.text.title.edit=Edit Macro
 gui.modify.text.command=Command
 gui.modify.text.key=Trigger
 
-gui.modify.text.repeat=Hold to repeat
+gui.modify.text.type=Style
 gui.modify.text.enable=Enable macro
 
 gui.modify.text.save=Save Macro
+
+gui.modify.text.up=On Up
+gui.modify.text.down=On Down
+gui.modify.text.repeat=Repeat
+gui.modify.text.shift=Shift
+gui.modify.text.ctrl=Ctrl
+gui.modify.text.alt=Alt
 ####
 
 ## GuiLayerManagement ##

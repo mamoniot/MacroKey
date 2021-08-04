@@ -3,7 +3,7 @@ package com.mattsmeets.macrokey.handler.hook;
 import com.mattsmeets.macrokey.MacroKey;
 import com.mattsmeets.macrokey.config.ModConfig;
 import com.mattsmeets.macrokey.event.ExecuteOnTickEvent;
-import com.mattsmeets.macrokey.model.LayerInterface;
+import com.mattsmeets.macrokey.model.Layer;
 import com.mattsmeets.macrokey.model.lambda.ExecuteOnTickInterface;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiIngameMenu;
@@ -37,7 +37,7 @@ public class GuiEventHandler {
             return;
         }
 
-        LayerInterface layer = instance.modState.getActiveLayer();
+        Layer layer = instance.bindingsRepository.getActiveLayer(false);
         // render the layer switcher button
         event.getButtonList().add(
                 switchButton = new GuiButton(
@@ -47,23 +47,23 @@ public class GuiEventHandler {
                         ModConfig.buttonLayerSwitchSettings[2],
                         ModConfig.buttonLayerSwitchSettings[3],
                         I18n.format("text.layer.display",
-                                layer == null ? this.layerMasterText : layer.getDisplayName()
+                                layer == null ? this.layerMasterText : layer.displayName
                         )
                 ));
     }
 
     @SubscribeEvent
-    public void postActionPerformed(GuiScreenEvent.ActionPerformedEvent.Post event) throws IOException {
+    public void postActionPerformed(GuiScreenEvent.ActionPerformedEvent.Post event) {
         if (!(event.getGui() instanceof GuiIngameMenu)
                 || event.getButton().id != ModConfig.buttonLayerSwitcherId) {
             return;
         }
 
-        LayerInterface layer = MacroKey.instance.modState.nextLayer();
+        Layer layer = MacroKey.instance.bindingsRepository.setNextActiveLayer(true);
 
         event.getButton().displayString =
                 I18n.format("text.layer.display",
-                        layer == null ? this.layerMasterText : layer.getDisplayName()
+                        layer == null ? this.layerMasterText : layer.displayName
                 );
     }
 

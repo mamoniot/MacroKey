@@ -1,10 +1,8 @@
 package com.mattsmeets.macrokey.proxy;
 
 import com.mattsmeets.macrokey.command.CommandMacroKey;
-import com.mattsmeets.macrokey.handler.ChangeHandler;
-import com.mattsmeets.macrokey.handler.GameTickHandler;
 import com.mattsmeets.macrokey.handler.GuiHandler;
-import com.mattsmeets.macrokey.handler.hook.ClientTickHandler;
+// import com.mattsmeets.macrokey.handler.hook.ClientTickHandler;
 import com.mattsmeets.macrokey.handler.hook.GuiEventHandler;
 import com.mattsmeets.macrokey.handler.hook.KeyInputHandler;
 import net.minecraft.client.settings.KeyBinding;
@@ -24,10 +22,7 @@ public class ClientProxy extends CommonProxy {
         this.registerHooks();
 
         // register MacroKey event handlers
-        MinecraftForge.EVENT_BUS.register(new GameTickHandler(null, null));
-        MinecraftForge.EVENT_BUS.register(new ChangeHandler.LayerChangeHandler());
-        MinecraftForge.EVENT_BUS.register(new ChangeHandler.MacroChangeHandler());
-
+        // MinecraftForge.EVENT_BUS.register(GameTickHandler.instance);
         // register GUI registry
         NetworkRegistry.INSTANCE.registerGuiHandler(instance, new GuiHandler());
 
@@ -43,7 +38,6 @@ public class ClientProxy extends CommonProxy {
         }
 
         MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
-        MinecraftForge.EVENT_BUS.register(new ClientTickHandler());
         MinecraftForge.EVENT_BUS.register(new GuiEventHandler());
     }
 }

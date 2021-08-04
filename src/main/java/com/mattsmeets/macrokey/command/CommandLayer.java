@@ -1,7 +1,7 @@
 package com.mattsmeets.macrokey.command;
 
 import com.mattsmeets.macrokey.MacroKey;
-import com.mattsmeets.macrokey.model.LayerInterface;
+import com.mattsmeets.macrokey.model.Layer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandException;
@@ -57,20 +57,16 @@ public class CommandLayer extends StrippedCommand {
     }
 
     private void printLayerInformation(ICommandSender sender) {
-        LayerInterface activeLayer = MacroKey.instance.modState.getActiveLayer();
+        Layer activeLayer = MacroKey.instance.bindingsRepository.getActiveLayer(false);
 
         String layerDisplayName = layerMasterText;
         int countMacroEnabled = 0;
 
         if (activeLayer != null) {
-            layerDisplayName = activeLayer.getDisplayName();
-            countMacroEnabled = activeLayer.getMacros().size();
+            layerDisplayName = activeLayer.displayName;
+            countMacroEnabled = activeLayer.macros.size();
         } else {
-            try {
-                countMacroEnabled = MacroKey.instance.bindingsRepository.findAllMacros(false).size();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            countMacroEnabled = MacroKey.instance.bindingsRepository.getMacros(false).size();
         }
 
         sender.sendMessage(
@@ -83,12 +79,8 @@ public class CommandLayer extends StrippedCommand {
     }
 
     private void nextLayer(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        try {
-            MacroKey.instance.modState.nextLayer();
+        MacroKey.instance.bindingsRepository.setNextActiveLayer(true);
 
-            this.execute(server, sender, args);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.execute(server, sender, args);
     }
 }
