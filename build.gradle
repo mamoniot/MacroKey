@@ -65,12 +65,12 @@ buildConfig {
         main {
             buildConfigField "String", "acceptedVersions", config.accepted_versions
                 buildConfigField "String", "fingerprint", project.findProperty('signingFingerprint')
-                buildConfigField "String", "updateJSON",
-                        config.update_url +
-                                '?mkver=' + project.version +
-                                '&mcver=' + config.mc_version +
-                                '&fmver=' + config.forge_version +
-                                '&fngpt=' + project.findProperty('signingFingerprint')
+            //     buildConfigField "String", "updateJSON",
+            //             config.update_url +
+            //                     '?mkver=' + project.version +
+            //                     '&mcver=' + config.mc_version +
+            //                     '&fmver=' + config.forge_version +
+            //                     '&fngpt=' + project.findProperty('signingFingerprint')
         }
     }
 }

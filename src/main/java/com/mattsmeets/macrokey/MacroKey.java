@@ -22,7 +22,6 @@ import java.io.File;
         clientSideOnly = true,
         useMetadata = true,
         acceptedMinecraftVersions = BuildConfig.acceptedVersions,
-        updateJSON = BuildConfig.updateJSON,
         certificateFingerprint = BuildConfig.fingerprint
 )
 public class MacroKey {
