@@ -64,12 +64,12 @@ public class MacroKey {
         proxy.init();
     }
 
-    @Mod.EventHandler
-    public void invalidFingerprint(FMLFingerprintViolationEvent event) {
-        this.logger = new LogHelper(ModReference.MOD_ID);
+    // @Mod.EventHandler
+    // public void invalidFingerprint(FMLFingerprintViolationEvent event) {
+        // this.logger = new LogHelper(ModReference.MOD_ID);
 
-        this.logger.warn("Invalid fingerprint detected! The version of the mod is most likely modified or an unofficial release.");
-        this.logger.warn("Please download the latest version from http://curse.com/project/243479");
-    }
+        // this.logger.warn("Invalid fingerprint detected! The version of the mod is most likely modified or an unofficial release.");
+        // this.logger.warn("Please download the latest version from http://curse.com/project/243479");
+    // }
 
 }
