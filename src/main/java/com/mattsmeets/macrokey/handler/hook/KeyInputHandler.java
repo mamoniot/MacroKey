@@ -122,15 +122,15 @@ public class KeyInputHandler {
 
         // every tick post an event for the normal,
         // non repeating commands to trigger
-        for(int i = 0; i < macrosToRun.size(); i++) {
-            Macro macro = macrosToRun.get(i);
+        if(macrosToRun.size() > 0) {
+            Macro macro = macrosToRun.get(0);
             boolean cancelled = !macro.active
                 || (macro.mustHoldShift && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
                 || (macro.mustHoldCtrl && !Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
                 || (macro.mustHoldAlt && !Keyboard.isKeyDown(Keyboard.KEY_LMENU));
             if(!cancelled) macro.execute(player);
+            macrosToRun.remove(0);
         }
-        this.macrosToRun.clear();
 
         boolean isLimited = delta >= ModConfig.repeatDelay;
         // loop through all executors and run them.
