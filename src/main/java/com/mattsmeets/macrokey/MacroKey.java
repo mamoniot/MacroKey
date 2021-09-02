@@ -20,9 +20,9 @@ import java.io.File;
         name = BuildConfig.NAME,
         version = BuildConfig.VERSION,
         clientSideOnly = true,
-        useMetadata = true,
-        acceptedMinecraftVersions = BuildConfig.acceptedVersions,
-        certificateFingerprint = BuildConfig.fingerprint
+        useMetadata = true
+        // acceptedMinecraftVersions = BuildConfig.acceptedVersions,
+        // certificateFingerprint = BuildConfig.fingerprint
 )
 public class MacroKey {
 
