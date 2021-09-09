@@ -27,12 +27,13 @@ gui.modify.text.command=Command
 gui.modify.text.key=Trigger
 
 gui.modify.text.type=Key Style
-gui.modify.text.enable=Enable macro
+gui.modify.text.enable=Enable Macro
 
 gui.modify.text.save=Save Macro
 
 gui.modify.text.up=On Up
 gui.modify.text.down=On Down
+gui.modify.text.ignore=Ignore
 gui.modify.text.repeat=Repeat
 gui.modify.text.shift=Shift
 gui.modify.text.ctrl=Ctrl
@@ -41,8 +42,6 @@ gui.modify.text.toggle=Toggle Style
 gui.modify.text.first=First
 gui.modify.text.second=Second
 gui.modify.text.both=Both
-gui.modify.text.hold=Hold
-gui.modify.text.ignore=Ignore
 ####
 
 ## GuiLayerManagement ##

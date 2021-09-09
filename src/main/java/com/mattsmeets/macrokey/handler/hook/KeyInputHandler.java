@@ -25,7 +25,6 @@ import java.util.Set;
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
 public class KeyInputHandler {
-
     private final HashSet<Integer> pressedKeys = new HashSet<>();
     private final HashSet<Integer> toggleKeys = new HashSet<>();
 
@@ -78,6 +77,17 @@ public class KeyInputHandler {
     public void onKeyEvent(boolean ispressed, ArrayList<Macro> macros) {
         //NOTE: this code can break if a repeat macro is changed while a key is being held down
         for(Macro macro : macros) {
+            boolean cancelled = (macro.flags&Macro.FLAG_ACTIVE) == 0
+                || ((macro.flags&Macro.FLAG_SHIFT_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+                || ((macro.flags&Macro.FLAG_SHIFT_UP) > 0 && Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+                || ((macro.flags&Macro.FLAG_CTRL_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                || ((macro.flags&Macro.FLAG_CTRL_UP) > 0 && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                || ((macro.flags&Macro.FLAG_ALT_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LMENU))
+                || ((macro.flags&Macro.FLAG_ALT_UP) > 0 && Keyboard.isKeyDown(Keyboard.KEY_LMENU))
+                || ((macro.flags&Macro.FLAG_NOTONEVEN) > 0 && !toggleKeys.contains(macro.keyCode))
+                || ((macro.flags&Macro.FLAG_NOTONODD) > 0 && toggleKeys.contains(macro.keyCode));
+            if(cancelled) continue;
+
             if((macro.flags&Macro.FLAG_ONDOWN) > 0) {
                 if(ispressed) {
                     this.macrosToRun.add(macro);
@@ -108,16 +118,6 @@ public class KeyInputHandler {
     }
 
 
-    public boolean macroIsActive(Macro macro) {
-        boolean cancelled = (macro.flags&Macro.FLAG_ACTIVE) == 0
-            || ((macro.flags&Macro.FLAG_SHIFT) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
-            || ((macro.flags&Macro.FLAG_CTRL) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
-            || ((macro.flags&Macro.FLAG_ALT) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LMENU))
-            || ((macro.flags&Macro.FLAG_NOTONEVEN) > 0 && !toggleKeys.contains(macro.keyCode))
-            || ((macro.flags&Macro.FLAG_NOTONODD) > 0 && toggleKeys.contains(macro.keyCode));
-        return !cancelled;
-    }
-
     public void execute(Macro macro, EntityPlayerSP player) {
         // send command or text to server. For the time being it is
         // not possible to execute client-only commands. Tested and its
@@ -141,7 +141,7 @@ public class KeyInputHandler {
         // non repeating commands to trigger
         if(macrosToRun.size() > 0) {
             Macro macro = macrosToRun.get(0);
-            if(macroIsActive(macro)) execute(macro, player);
+            execute(macro, player);
             macrosToRun.remove(0);//NOTE: a ring buffer would be more efficient
         }
 
@@ -166,7 +166,7 @@ public class KeyInputHandler {
 
         for(int i = 0; i < macrosToRepeat.size(); i++) {
             Macro macro = macrosToRepeat.get(i);
-            if(macroIsActive(macro)) execute(macro, player);
+            execute(macro, player);
         }
 
     }

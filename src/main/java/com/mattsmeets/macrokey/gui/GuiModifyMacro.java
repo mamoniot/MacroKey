@@ -20,7 +20,7 @@ import java.util.UUID;
 public class GuiModifyMacro extends GuiScreen {
     private final GuiScreen parentScreen;
 
-    private final String
+    private static final String
             defaultScreenTitleText = I18n.format("gui.modify.text.title.new"),
             editScreenTitleText = I18n.format("gui.modify.text.title.edit"),
             TypeText = I18n.format("gui.modify.text.type"),
@@ -30,9 +30,8 @@ public class GuiModifyMacro extends GuiScreen {
             keyBoxTitleText = I18n.format("gui.modify.text.key"),
             saveButtonText = I18n.format("gui.modify.text.save");
 
-    private final String
-            TrueText = I18n.format("gui.modify.text.hold"),
-            FalseText = I18n.format("gui.modify.text.ignore"),
+    private static final String
+            ignoreText = I18n.format("gui.modify.text.ignore"),
             ShiftText = I18n.format("gui.modify.text.shift"),
             CtrlText = I18n.format("gui.modify.text.ctrl"),
             AltText = I18n.format("gui.modify.text.alt"),
@@ -83,13 +82,13 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.buttonList.add(this.btnKeyBinding = new GuiButton(3, this.width/2 - 75, 100, 150, 20, GameSettings.getKeyDisplayString(0)));
 
-        this.buttonList.add(this.commandActive = new GuiButton(5, this.width/2 - 75, 130, 65, 20, enabledText));
-        this.buttonList.add(this.commandType = new GuiButton(4, this.width/2 - 75, 152, 65, 20, downText));
-        this.buttonList.add(this.commandToggle = new GuiButton(6, this.width/2 - 75, 174, 65, 20, bothText));
+        this.buttonList.add(this.commandActive = new GuiButton(5, this.width/2 - 75, 130, 57, 20, enabledText));
+        this.buttonList.add(this.commandType = new GuiButton(4, this.width/2 - 75, 152, 57, 20, downText));
+        this.buttonList.add(this.commandToggle = new GuiButton(6, this.width/2 - 75, 174, 57, 20, bothText));
 
-        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width/2 + 25, 130, 50, 20, FalseText));
-        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width/2 + 25, 152, 50, 20, FalseText));
-        this.buttonList.add(this.altButton = new GuiButton(13, this.width/2 + 25, 174, 50, 20, FalseText));
+        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width/2 + 19, 130, 57, 20, ignoreText));
+        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width/2 + 19, 152, 57, 20, ignoreText));
+        this.buttonList.add(this.altButton = new GuiButton(13, this.width/2 + 19, 174, 57, 20, ignoreText));
 
         this.command = new GuiTextField(9, this.fontRenderer, this.width/2 - 100, 50, 200, 20);
         this.command.setFocused(true);
@@ -117,9 +116,18 @@ public class GuiModifyMacro extends GuiScreen {
                 this.commandToggle.displayString = bothText;
             }
 
-            this.shiftButton.displayString = (flags&Macro.FLAG_SHIFT) > 0 ? TrueText : FalseText;
-            this.ctrlButton.displayString = (flags&Macro.FLAG_CTRL) > 0 ? TrueText : FalseText;
-            this.altButton.displayString = (flags&Macro.FLAG_ALT) > 0 ? TrueText : FalseText;
+            this.shiftButton.displayString = getAltDisplay(flags, Macro.FLAG_SHIFT_DOWN);
+            this.ctrlButton.displayString = getAltDisplay(flags, Macro.FLAG_CTRL_DOWN);
+            this.altButton.displayString = getAltDisplay(flags, Macro.FLAG_ALT_DOWN);
+        }
+    }
+    public static final String getAltDisplay(int flags, int flag) {
+        if((flags&flag) > 0) {
+            return downText;
+        } else if((flags&(flag<<1)) > 0) {
+            return upText;
+        } else {
+            return ignoreText;
         }
     }
 
@@ -167,13 +175,13 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.command.drawTextBox();
 
-        this.drawString(this.fontRenderer, enableCommandText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(enableCommandText) - 129, 136, -6250336);
-        this.drawString(this.fontRenderer, TypeText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(TypeText) - 129, 158, -6250336);
-        this.drawString(this.fontRenderer, toggleText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(toggleText) - 129, 180, -6250336);
+        this.drawString(this.fontRenderer, enableCommandText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(enableCommandText), 136, -6250336);
+        this.drawString(this.fontRenderer, TypeText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(TypeText), 158, -6250336);
+        this.drawString(this.fontRenderer, toggleText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(toggleText), 180, -6250336);
 
-        this.drawString(this.fontRenderer, ShiftText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(ShiftText), 136, -6250336);
-        this.drawString(this.fontRenderer, CtrlText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(CtrlText), 158, -6250336);
-        this.drawString(this.fontRenderer, AltText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(AltText), 180, -6250336);
+        this.drawString(this.fontRenderer, ShiftText, this.width/2 + 16 - mc.fontRenderer.getStringWidth(ShiftText), 136, -6250336);
+        this.drawString(this.fontRenderer, CtrlText, this.width/2 + 16 - mc.fontRenderer.getStringWidth(CtrlText), 158, -6250336);
+        this.drawString(this.fontRenderer, AltText, this.width/2 + 16 - mc.fontRenderer.getStringWidth(AltText), 180, -6250336);
 
 
         this.drawCenteredString(this.fontRenderer, commandBoxTitleText, this.width/2, 37, -6250336);
@@ -289,16 +297,30 @@ public class GuiModifyMacro extends GuiScreen {
             this.commandActive.displayString = (this.result.flags&Macro.FLAG_ACTIVE) > 0 ? enabledText : disabledText;
         }
         if(this.shiftButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.flags ^= Macro.FLAG_SHIFT;
-            this.shiftButton.displayString = (this.result.flags&Macro.FLAG_SHIFT) > 0 ? TrueText : FalseText;
+            setAltDisplay(this.shiftButton, Macro.FLAG_SHIFT_DOWN);
         }
         if(this.ctrlButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.flags ^= Macro.FLAG_CTRL;
-            this.ctrlButton.displayString = (this.result.flags&Macro.FLAG_CTRL) > 0 ? TrueText : FalseText;
+            setAltDisplay(this.ctrlButton, Macro.FLAG_CTRL_DOWN);
         }
         if(this.altButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.flags ^= Macro.FLAG_ALT;
-            this.altButton.displayString = (this.result.flags&Macro.FLAG_ALT) > 0 ? TrueText : FalseText;
+            setAltDisplay(this.altButton, Macro.FLAG_ALT_DOWN);
+        }
+    }
+
+    public void setAltDisplay(GuiButton button, int flag) {
+        if((this.result.flags&flag) > 0) {
+            this.result.flags &= ~flag;
+            this.result.flags |= flag<<1;
+
+            button.displayString = upText;
+        } else if((this.result.flags&(flag<<1)) > 0) {
+            this.result.flags &= ~(flag<<1);
+
+            button.displayString = ignoreText;
+        } else {
+            this.result.flags |= flag;
+
+            button.displayString = downText;
         }
     }
 
