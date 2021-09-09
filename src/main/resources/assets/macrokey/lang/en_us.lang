@@ -41,6 +41,8 @@ gui.modify.text.toggle=Toggle Style
 gui.modify.text.first=First
 gui.modify.text.second=Second
 gui.modify.text.both=Both
+gui.modify.text.hold=Hold
+gui.modify.text.ignore=Ignore
 ####
 
 ## GuiLayerManagement ##

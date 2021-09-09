@@ -31,8 +31,8 @@ public class GuiModifyMacro extends GuiScreen {
             saveButtonText = I18n.format("gui.modify.text.save");
 
     private final String
-            TrueText = I18n.format("true"),
-            FalseText = I18n.format("false"),
+            TrueText = I18n.format("gui.modify.text.hold"),
+            FalseText = I18n.format("gui.modify.text.ignore"),
             ShiftText = I18n.format("gui.modify.text.shift"),
             CtrlText = I18n.format("gui.modify.text.ctrl"),
             AltText = I18n.format("gui.modify.text.alt"),
@@ -78,20 +78,20 @@ public class GuiModifyMacro extends GuiScreen {
     @Override
     public void initGui() {
         super.initGui();
-        this.buttonList.add(this.addButton = new GuiButton(0, this.width / 2 - 155, this.height - 29, 150, 20, saveButtonText));
-        this.buttonList.add(this.cancelButton = new GuiButton(1, this.width / 2 - 155 + 160, this.height - 29, 150, 20, cancelText));
+        this.buttonList.add(this.addButton = new GuiButton(0, this.width/2 - 155, this.height - 29, 150, 20, saveButtonText));
+        this.buttonList.add(this.cancelButton = new GuiButton(1, this.width/2 - 155 + 160, this.height - 29, 150, 20, cancelText));
 
-        this.buttonList.add(this.btnKeyBinding = new GuiButton(3, this.width / 2 - 75, 100, 150, 20, GameSettings.getKeyDisplayString(0)));
+        this.buttonList.add(this.btnKeyBinding = new GuiButton(3, this.width/2 - 75, 100, 150, 20, GameSettings.getKeyDisplayString(0)));
 
-        this.buttonList.add(this.commandActive = new GuiButton(5, this.width / 2 - 75, 130, 65, 20, enabledText));
-        this.buttonList.add(this.commandType = new GuiButton(4, this.width / 2 - 75, 152, 65, 20, downText));
-        this.buttonList.add(this.commandToggle = new GuiButton(6, this.width / 2 - 75, 174, 65, 20, bothText));
+        this.buttonList.add(this.commandActive = new GuiButton(5, this.width/2 - 75, 130, 65, 20, enabledText));
+        this.buttonList.add(this.commandType = new GuiButton(4, this.width/2 - 75, 152, 65, 20, downText));
+        this.buttonList.add(this.commandToggle = new GuiButton(6, this.width/2 - 75, 174, 65, 20, bothText));
 
-        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width / 2 + 25, 130, 50, 20, FalseText));
-        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width / 2 + 25, 152, 50, 20, FalseText));
-        this.buttonList.add(this.altButton = new GuiButton(13, this.width / 2 + 25, 174, 50, 20, FalseText));
+        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width/2 + 25, 130, 50, 20, FalseText));
+        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width/2 + 25, 152, 50, 20, FalseText));
+        this.buttonList.add(this.altButton = new GuiButton(13, this.width/2 + 25, 174, 50, 20, FalseText));
 
-        this.command = new GuiTextField(9, this.fontRenderer, this.width / 2 - 100, 50, 200, 20);
+        this.command = new GuiTextField(9, this.fontRenderer, this.width/2 - 100, 50, 200, 20);
         this.command.setFocused(true);
         this.command.setMaxStringLength(Integer.MAX_VALUE);
 
@@ -126,23 +126,17 @@ public class GuiModifyMacro extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         super.actionPerformed(button);
-        switch (button.id) {
-            case 0:
-                if (this.command.getText().length() <= 1) {
-                    break;
-                }
-
-                this.result.command = command.getText();
-
-                if (!this.existing) {
-                    MacroKey.instance.bindingsRepository.addMacro(this.result, true);
-                    this.existing = true;
-                } else {
-                    MacroKey.instance.bindingsRepository.saveConfiguration();
-                }
-            case 1:
-                this.mc.displayGuiScreen(parentScreen);
-                break;
+        if(button.id == 0) {
+            this.result.command = command.getText();
+            if(!this.existing) {
+                this.existing = true;
+                MacroKey.instance.bindingsRepository.addMacro(this.result, true);
+            } else {
+                MacroKey.instance.bindingsRepository.saveConfiguration();
+            }
+            this.mc.displayGuiScreen(parentScreen);
+        } else if(button.id == 1) {
+            this.mc.displayGuiScreen(parentScreen);
         }
     }
 
@@ -152,7 +146,7 @@ public class GuiModifyMacro extends GuiScreen {
         this.drawDefaultBackground();
 
         // draw title
-        this.drawCenteredString(this.fontRenderer, existing ? this.editScreenTitleText : this.defaultScreenTitleText, this.width / 2, 8, 16777215);
+        this.drawCenteredString(this.fontRenderer, existing ? this.editScreenTitleText : this.defaultScreenTitleText, this.width/2, 8, 16777215);
 
         // render add and cancel buttons
         this.addButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
@@ -173,17 +167,17 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.command.drawTextBox();
 
-        this.drawString(this.fontRenderer, enableCommandText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(enableCommandText) - 129, 135, -6250336);
-        this.drawString(this.fontRenderer, TypeText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(TypeText) - 129, 157, -6250336);
-        this.drawString(this.fontRenderer, toggleText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(toggleText) - 129, 179, -6250336);
+        this.drawString(this.fontRenderer, enableCommandText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(enableCommandText) - 129, 136, -6250336);
+        this.drawString(this.fontRenderer, TypeText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(TypeText) - 129, 158, -6250336);
+        this.drawString(this.fontRenderer, toggleText, this.width/2 + 51 - mc.fontRenderer.getStringWidth(toggleText) - 129, 180, -6250336);
 
-        this.drawString(this.fontRenderer, ShiftText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(ShiftText), 135, -6250336);
-        this.drawString(this.fontRenderer, CtrlText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(CtrlText), 157, -6250336);
-        this.drawString(this.fontRenderer, AltText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(AltText), 179, -6250336);
+        this.drawString(this.fontRenderer, ShiftText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(ShiftText), 136, -6250336);
+        this.drawString(this.fontRenderer, CtrlText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(CtrlText), 158, -6250336);
+        this.drawString(this.fontRenderer, AltText, this.width/2 + 23 - mc.fontRenderer.getStringWidth(AltText), 180, -6250336);
 
 
-        this.drawCenteredString(this.fontRenderer, commandBoxTitleText, this.width / 2, 37, -6250336);
-        this.drawCenteredString(this.fontRenderer, keyBoxTitleText, this.width / 2, 90, -6250336);
+        this.drawCenteredString(this.fontRenderer, commandBoxTitleText, this.width/2, 37, -6250336);
+        this.drawCenteredString(this.fontRenderer, keyBoxTitleText, this.width/2, 90, -6250336);
 
         this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(this.result.keyCode);
 
