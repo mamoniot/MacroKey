@@ -23,7 +23,6 @@ import io.netty.buffer.Unpooled;
 public class BindingsRepository {
 	private File bindingFile;
 
-	private int version;
 	private UUID activeLayer;
 	private HashMap<Integer, ArrayList<Macro>> macros;
 	private ArrayList<Layer> layers;
@@ -330,7 +329,7 @@ public class BindingsRepository {
 	public void saveConfiguration() {
 		ByteBuf buffer = Unpooled.buffer();
 		try {
-			buffer.writeInt(version);
+			buffer.writeInt(3);//version
 			writeString(buffer, activeLayer == null ? "" : activeLayer.toString());
 
 			buffer.writeInt(macros.size());
@@ -342,9 +341,8 @@ public class BindingsRepository {
 				for(int i = 0; i < ms.size(); i++) {
 					Macro macro = ms.get(i);
 					writeString(buffer, macro.umid.toString());
-					buffer.writeInt(macro.type);
-					buffer.writeInt((macro.mustHoldShift?1:0) + (macro.mustHoldCtrl?2:0) + (macro.mustHoldAlt?4:0) + (macro.active?8:0));
 					writeString(buffer, macro.command);
+					buffer.writeInt(macro.flags);
 				}
 			}
 
@@ -371,7 +369,6 @@ public class BindingsRepository {
 	}
 
 	public void setDefaultConfiguration() {
-		version = 2;
 		activeLayer = null;
 		macros = new HashMap<Integer, ArrayList<Macro>>();
 		layers = new ArrayList<Layer>();
@@ -386,8 +383,8 @@ public class BindingsRepository {
 			}
 			buffer.writeBytes(new FileInputStream(bindingFile), (int)bindingFile.length());
 
-			version = buffer.readInt();
-			if(version != 2) {
+			int version = buffer.readInt();
+			if(version != 3) {
 				setDefaultConfiguration();
 				return;
 			}
@@ -416,22 +413,13 @@ public class BindingsRepository {
 						return;
 					}
 					macro.umid = UUID.fromString(str);//throws if invalid
-					macro.type = buffer.readInt();
-					int flags = buffer.readInt();
-					macro.mustHoldShift = flags%2 == 1;
-					flags /= 2;
-					macro.mustHoldCtrl = flags%2 == 1;
-					flags /= 2;
-					macro.mustHoldAlt = flags%2 == 1;
-					flags /= 2;
-					macro.active = flags%2 == 1;
 					macro.command = readString(buffer);
-					macro.keyCode = keycode;
 					if(macro.command == null) {
 						setDefaultConfiguration();
 						return;
 					}
-
+					macro.flags = buffer.readInt();
+					macro.keyCode = keycode;
 					macro_list.add(macro);
 				}
 				macros.put(keycode, macro_list);

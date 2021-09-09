@@ -15,6 +15,7 @@ import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class GuiModifyMacro extends GuiScreen {
     private final GuiScreen parentScreen;
@@ -24,6 +25,7 @@ public class GuiModifyMacro extends GuiScreen {
             editScreenTitleText = I18n.format("gui.modify.text.title.edit"),
             TypeText = I18n.format("gui.modify.text.type"),
             enableCommandText = I18n.format("gui.modify.text.enable"),
+            toggleText = I18n.format("gui.modify.text.toggle"),
             commandBoxTitleText = I18n.format("gui.modify.text.command"),
             keyBoxTitleText = I18n.format("gui.modify.text.key"),
             saveButtonText = I18n.format("gui.modify.text.save");
@@ -39,6 +41,9 @@ public class GuiModifyMacro extends GuiScreen {
             downText = I18n.format("gui.modify.text.down"),
             upText = I18n.format("gui.modify.text.up"),
             repeatText = I18n.format("gui.modify.text.repeat"),
+            bothText = I18n.format("gui.modify.text.both"),
+            firstText = I18n.format("gui.modify.text.first"),
+            secondText = I18n.format("gui.modify.text.second"),
             cancelText = I18n.format("gui.cancel");
 
     private boolean existing;
@@ -47,7 +52,7 @@ public class GuiModifyMacro extends GuiScreen {
     private GuiTextField command;
 
     private GuiButton btnKeyBinding;
-    private GuiButton typeCommand, commandActive;
+    private GuiButton commandActive, commandType, commandToggle;
     private GuiButton addButton, cancelButton;
     private GuiButton shiftButton, ctrlButton, altButton;
 
@@ -57,6 +62,7 @@ public class GuiModifyMacro extends GuiScreen {
         // does the macro already exist, if not create a new one
         if(key == null) {
             this.result = new Macro();
+            this.result.umid = UUID.randomUUID();
             this.existing = false;
         } else {
             this.result = key;
@@ -77,34 +83,43 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.buttonList.add(this.btnKeyBinding = new GuiButton(3, this.width / 2 - 75, 100, 150, 20, GameSettings.getKeyDisplayString(0)));
 
-        this.buttonList.add(this.typeCommand = new GuiButton(4, this.width / 2 - 75, 140, 65, 20, downText));
-        this.buttonList.add(this.commandActive = new GuiButton(5, this.width / 2 - 75, 162, 65, 20, enabledText));
+        this.buttonList.add(this.commandActive = new GuiButton(5, this.width / 2 - 75, 130, 65, 20, enabledText));
+        this.buttonList.add(this.commandType = new GuiButton(4, this.width / 2 - 75, 152, 65, 20, downText));
+        this.buttonList.add(this.commandToggle = new GuiButton(6, this.width / 2 - 75, 174, 65, 20, bothText));
 
-        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width / 2 + 25, 129, 50, 20, FalseText));
-        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width / 2 + 25, 151, 50, 20, FalseText));
-        this.buttonList.add(this.altButton = new GuiButton(13, this.width / 2 + 25, 173, 50, 20, FalseText));
+        this.buttonList.add(this.shiftButton = new GuiButton(11, this.width / 2 + 25, 130, 50, 20, FalseText));
+        this.buttonList.add(this.ctrlButton = new GuiButton(12, this.width / 2 + 25, 152, 50, 20, FalseText));
+        this.buttonList.add(this.altButton = new GuiButton(13, this.width / 2 + 25, 174, 50, 20, FalseText));
 
         this.command = new GuiTextField(9, this.fontRenderer, this.width / 2 - 100, 50, 200, 20);
         this.command.setFocused(true);
         this.command.setMaxStringLength(Integer.MAX_VALUE);
 
         if (this.existing) {
-            this.command.setText(result.command.toString());
+            this.command.setText(this.result.command.toString());
+            int flags = this.result.flags;
 
             this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(result.keyCode);
-            if(result.type == Macro.ONDOWN) {
-                this.typeCommand.displayString = downText;
-            } else if(result.type == Macro.ONUP) {
-                this.typeCommand.displayString = upText;
-            } else {
-                this.typeCommand.displayString = repeatText;
+
+            this.commandActive.displayString = (flags&Macro.FLAG_ACTIVE) > 0 ? enabledText : disabledText;
+            if((flags&Macro.FLAG_ONDOWN) > 0) {
+                this.commandType.displayString = downText;
+            } else if((flags&Macro.FLAG_ONUP) > 0) {
+                this.commandType.displayString = upText;
+            } else if((flags&Macro.FLAG_REPEAT_ONDOWN) > 0) {
+                this.commandType.displayString = repeatText;
             }
-            this.commandActive.displayString = result.active ? enabledText : disabledText;
+            if((flags&Macro.FLAG_NOTONEVEN) > 0) {
+                this.commandToggle.displayString = firstText;
+            } else if((flags&Macro.FLAG_NOTONODD) > 0) {
+                this.commandToggle.displayString = secondText;
+            } else {
+                this.commandToggle.displayString = bothText;
+            }
 
-            this.shiftButton.displayString = this.result.mustHoldShift ? TrueText : FalseText;
-            this.ctrlButton.displayString = this.result.mustHoldCtrl ? TrueText : FalseText;
-            this.altButton.displayString = this.result.mustHoldAlt ? TrueText : FalseText;
-
+            this.shiftButton.displayString = (flags&Macro.FLAG_SHIFT) > 0 ? TrueText : FalseText;
+            this.ctrlButton.displayString = (flags&Macro.FLAG_CTRL) > 0 ? TrueText : FalseText;
+            this.altButton.displayString = (flags&Macro.FLAG_ALT) > 0 ? TrueText : FalseText;
         }
     }
 
@@ -146,23 +161,25 @@ public class GuiModifyMacro extends GuiScreen {
         // draw keycode as keyboard key
         this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(this.result.keyCode);
 
-        // this.typeCommand.displayString = this.result.type == Macro.REPEAT_ONDOWN ? enabledText : disabledText;
+        // this.commandType.displayString = this.result.type == Macro.REPEAT_ONDOWN ? enabledText : disabledText;
         // this.commandActive.displayString = this.result.active ? enabledText : disabledText;
 
-        this.typeCommand.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.commandActive.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
+        this.commandType.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
+        this.commandToggle.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.shiftButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.ctrlButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.altButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
 
         this.command.drawTextBox();
 
-        this.drawString(this.fontRenderer, TypeText, this.width / 2 + 50 - mc.fontRenderer.getStringWidth(TypeText) - 129, 145, -6250336);
-        this.drawString(this.fontRenderer, enableCommandText, this.width / 2 + 50 - mc.fontRenderer.getStringWidth(enableCommandText) - 129, 167, -6250336);
+        this.drawString(this.fontRenderer, enableCommandText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(enableCommandText) - 129, 135, -6250336);
+        this.drawString(this.fontRenderer, TypeText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(TypeText) - 129, 157, -6250336);
+        this.drawString(this.fontRenderer, toggleText, this.width / 2 + 49 - mc.fontRenderer.getStringWidth(toggleText) - 129, 179, -6250336);
 
-        this.drawString(this.fontRenderer, ShiftText, this.width / 2 + 24 - mc.fontRenderer.getStringWidth(ShiftText), 135, -6250336);
-        this.drawString(this.fontRenderer, CtrlText, this.width / 2 + 24 - mc.fontRenderer.getStringWidth(CtrlText), 157, -6250336);
-        this.drawString(this.fontRenderer, AltText, this.width / 2 + 24 - mc.fontRenderer.getStringWidth(AltText), 179, -6250336);
+        this.drawString(this.fontRenderer, ShiftText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(ShiftText), 135, -6250336);
+        this.drawString(this.fontRenderer, CtrlText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(CtrlText), 157, -6250336);
+        this.drawString(this.fontRenderer, AltText, this.width / 2 + 23 - mc.fontRenderer.getStringWidth(AltText), 179, -6250336);
 
 
         this.drawCenteredString(this.fontRenderer, commandBoxTitleText, this.width / 2, 37, -6250336);
@@ -236,33 +253,58 @@ public class GuiModifyMacro extends GuiScreen {
             this.changingKey = true;
         }
 
-        if (this.typeCommand.mousePressed(mc, mouseX, mouseY)) {
-            this.result.type = this.result.type%Macro.TOTAL_TYPES + 1;
-            if(result.type == Macro.ONDOWN) {
-                this.typeCommand.displayString = downText;
-            } else if(result.type == Macro.ONUP) {
-                this.typeCommand.displayString = upText;
-            } else {
-                this.typeCommand.displayString = repeatText;
+        if (this.commandType.mousePressed(mc, mouseX, mouseY)) {
+            if((this.result.flags&Macro.FLAG_ONDOWN) > 0) {
+                this.result.flags &= ~Macro.FLAG_ONDOWN;
+                this.result.flags |= Macro.FLAG_ONUP;
+
+                this.commandType.displayString = upText;
+            } else if((this.result.flags&Macro.FLAG_ONUP) > 0) {
+                this.result.flags &= ~Macro.FLAG_ONUP;
+                this.result.flags |= Macro.FLAG_REPEAT_ONDOWN;
+
+                this.commandType.displayString = repeatText;
+            } else if((this.result.flags&Macro.FLAG_REPEAT_ONDOWN) > 0) {
+                this.result.flags &= ~Macro.FLAG_REPEAT_ONDOWN;
+                this.result.flags |= Macro.FLAG_ONDOWN;
+
+                this.commandType.displayString = downText;
             }
         }
 
-        if (this.commandActive.mousePressed(mc, mouseX, mouseY)) {
-            this.result.active = !this.result.active;
-            this.commandActive.displayString = result.active ? enabledText : disabledText;
+        if (this.commandToggle.mousePressed(mc, mouseX, mouseY)) {
+            if((this.result.flags&Macro.FLAG_NOTONEVEN) > 0) {
+                this.result.flags &= ~Macro.FLAG_NOTONEVEN;
+                this.result.flags |= Macro.FLAG_NOTONODD;
+
+                this.commandToggle.displayString = secondText;
+            } else if((this.result.flags&Macro.FLAG_NOTONODD) > 0) {
+                this.result.flags &= ~Macro.FLAG_NOTONODD;
+
+                this.commandToggle.displayString = bothText;
+            } else {
+                this.result.flags |= Macro.FLAG_NOTONEVEN;
+
+                this.commandToggle.displayString = firstText;
+            }
         }
 
+
+        if(this.commandActive.mousePressed(mc, mouseX, mouseY)) {
+            this.result.flags ^= Macro.FLAG_ACTIVE;
+            this.commandActive.displayString = (this.result.flags&Macro.FLAG_ACTIVE) > 0 ? enabledText : disabledText;
+        }
         if(this.shiftButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.mustHoldShift = !this.result.mustHoldShift;
-            this.shiftButton.displayString = this.result.mustHoldShift ? TrueText : FalseText;
+            this.result.flags ^= Macro.FLAG_SHIFT;
+            this.shiftButton.displayString = (this.result.flags&Macro.FLAG_SHIFT) > 0 ? TrueText : FalseText;
         }
         if(this.ctrlButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.mustHoldCtrl = !this.result.mustHoldCtrl;
-            this.ctrlButton.displayString = this.result.mustHoldCtrl ? TrueText : FalseText;
+            this.result.flags ^= Macro.FLAG_CTRL;
+            this.ctrlButton.displayString = (this.result.flags&Macro.FLAG_CTRL) > 0 ? TrueText : FalseText;
         }
         if(this.altButton.mousePressed(mc, mouseX, mouseY)) {
-            this.result.mustHoldAlt = !this.result.mustHoldAlt;
-            this.altButton.displayString = this.result.mustHoldAlt ? TrueText : FalseText;
+            this.result.flags ^= Macro.FLAG_ALT;
+            this.altButton.displayString = (this.result.flags&Macro.FLAG_ALT) > 0 ? TrueText : FalseText;
         }
     }
 
