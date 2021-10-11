@@ -30,8 +30,8 @@ import com.mattsmeets.macrokey.model.Macro;
 public class GuiRadialMenu extends GuiScreen {
     public static final float PRECISION = 5.0f;
     public static final float OPEN_ANIMATION_LENGTH = 2.0f;
-    public static final float WHEEL_RADIUS = 20f;
-    public static final float WHEEL_RADIUS_OUT_SCALE = 4f;
+    public static final float WHEEL_RADIUS = 15f;
+    public static final float WHEEL_RADIUS_OUT_SCALE = 5f;
 
     public boolean closing;
     public boolean doneClosing;
