@@ -29,14 +29,14 @@ import com.mattsmeets.macrokey.model.Macro;
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class GuiRadialMenu extends GuiScreen {
     public static final float PRECISION = 5.0f;
-    public static final float OPEN_ANIMATION_LENGTH = 2.0f;
+    public static final float OPEN_ANIMATION_LENGTH = 80.0f;//ms
     public static final float WHEEL_RADIUS = 15f;
     public static final float WHEEL_RADIUS_OUT_SCALE = 5f;
 
     public boolean closing;
     public boolean doneClosing;
 
-    public double startAnimation;
+    public long startAnimation;
 
     public int selectedItem;
     public ArrayList<Macro> macros;
@@ -48,7 +48,7 @@ public class GuiRadialMenu extends GuiScreen {
         this.doneClosing = false;
 
         Minecraft mc = Minecraft.getMinecraft();
-        this.startAnimation = mc.world.getTotalWorldTime() + (double) mc.getRenderPartialTicks();
+        this.startAnimation = System.currentTimeMillis();
 
         this.selectedItem = -1;
     }
@@ -76,7 +76,7 @@ public class GuiRadialMenu extends GuiScreen {
             }
             closing = true;
             doneClosing = false;
-            startAnimation = Minecraft.getMinecraft().world.getTotalWorldTime() + (double) Minecraft.getMinecraft().getRenderPartialTicks();
+            startAnimation = System.currentTimeMillis();
         }
     }
 
@@ -92,14 +92,15 @@ public class GuiRadialMenu extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
 
-        long worldTime = Minecraft.getMinecraft().world.getTotalWorldTime();
-        float animationTime = (float) (worldTime + partialTicks - startAnimation);
+        long worldTime = System.currentTimeMillis();
+        float animationTime = (float) (worldTime - startAnimation);
         float openAnimation = closing ? 1.0f - animationTime / OPEN_ANIMATION_LENGTH : animationTime / OPEN_ANIMATION_LENGTH;
         if (closing && openAnimation <= 0.0f) {
             doneClosing = true;
         }
 
         float animProgress = MathHelper.clamp(openAnimation, 0, 1);
+        animProgress = -animProgress*(animProgress - 2);
         float radiusIn = Math.max(0.1f, WHEEL_RADIUS * animProgress);
         float radiusOut = radiusIn * WHEEL_RADIUS_OUT_SCALE;
         float itemRadius = (radiusIn + radiusOut) * 0.5f;
