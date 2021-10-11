@@ -1,7 +1,7 @@
 package com.mattsmeets.macrokey.command;
 
-import com.mattsmeets.macrokey.event.ExecuteOnTickEvent;
-import com.mattsmeets.macrokey.model.lambda.ExecuteOnTickInterface;
+import com.mattsmeets.macrokey.config.ModConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -16,12 +16,22 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mattsmeets.macrokey.MacroKey.instance;
+
 public class CommandOpenGUI extends StrippedCommand {
 
     @Override
     @SideOnly(Side.CLIENT)
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        MinecraftForge.EVENT_BUS.post(new ExecuteOnTickEvent(ExecuteOnTickInterface.openMacroKeyGUI));
+
+        Minecraft.getMinecraft().player.openGui(
+            instance,
+            ModConfig.guiMacroManagementId,
+            Minecraft.getMinecraft().world,
+            (int) Minecraft.getMinecraft().player.posX,
+            (int) Minecraft.getMinecraft().player.posY,
+            (int) Minecraft.getMinecraft().player.posZ
+        );
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.HashMap;
+import java.util.Comparator;
 
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
@@ -31,24 +32,61 @@ public class MacroListFragment extends GuiListExtended {
 
     private final UUID currentLayerulid;
 
+    public static class SortMacro implements Comparator<GuiListExtended.IGuiListEntry> {//java is dumb
+        public static final SortMacro instance = new SortMacro();
+        public int compare(GuiListExtended.IGuiListEntry a_, GuiListExtended.IGuiListEntry b_)
+        {
+            MacroListFragment.KeyEntry a = (MacroListFragment.KeyEntry)a_;
+            MacroListFragment.KeyEntry b = (MacroListFragment.KeyEntry)b_;
+            if((a.macro.flags&Macro.FLAG_RADIAL) > 0) {
+                if((b.macro.flags&Macro.FLAG_RADIAL) > 0) {
+                    return a.macro.radialKey.compareTo(b.macro.radialKey);
+                } else {
+                    return 1;
+                }
+            } else {
+                if((b.macro.flags&Macro.FLAG_RADIAL) > 0) {
+                    return -1;
+                } else {
+                    String as = GameSettings.getKeyDisplayString(a.macro.keyCode);
+                    String bs = GameSettings.getKeyDisplayString(b.macro.keyCode);
+                    return as.compareTo(bs);
+                }
+            }
+        }
+    }
+
     public MacroListFragment(GuiMacroManagement guiMacroManagement, UUID layer) {
         super(guiMacroManagement.mc, guiMacroManagement.width + 45, guiMacroManagement.height, 63, guiMacroManagement.height - 32, 20);
 
         this.guiMacroManagement = guiMacroManagement;
         this.currentLayerulid = layer;
 
-        HashMap<Integer, ArrayList<Macro>> macros = instance.bindingsRepository.getMacros(true);
+        instance.bindingsRepository.loadConfiguration();
+        HashMap<Integer, ArrayList<Macro>> macros = instance.bindingsRepository.keyMacros;
 
         this.listEntries = new ArrayList<GuiListExtended.IGuiListEntry>();
 
         for (HashMap.Entry<Integer, ArrayList<Macro>> entry : macros.entrySet()) {
-            int keycode = entry.getKey();
+            // int keycode = entry.getKey();
             ArrayList<Macro> ms = entry.getValue();
             for(int i = 0; i < ms.size(); i++) {
                 Macro macro = ms.get(i);
                 this.listEntries.add(new MacroListFragment.KeyEntry(macro));
             }
         }
+
+        HashMap<String, ArrayList<Macro>> radialMacros = instance.bindingsRepository.radialMacros;
+
+        for (HashMap.Entry<String, ArrayList<Macro>> entry : radialMacros.entrySet()) {
+            // String radialKey = entry.getKey();
+            ArrayList<Macro> ms = entry.getValue();
+            for(int i = 0; i < ms.size(); i++) {
+                Macro macro = ms.get(i);
+                this.listEntries.add(new MacroListFragment.KeyEntry(macro));
+            }
+        }
+        this.listEntries.sort(SortMacro.instance);
     }
 
     @Override
@@ -65,23 +103,23 @@ public class MacroListFragment extends GuiListExtended {
     @SideOnly(Side.CLIENT)
     private class KeyEntry implements GuiListExtended.IGuiListEntry {
 
-        private final Macro macro;
+        public final Macro macro;
 
-        private final GuiButton
+        public final GuiButton
         btnChangeKeyBinding,
         btnRemoveKeyBinding,
         btnEdit,
         btnEnabledInLayer;
-        private final String
+        public final String
         removeMacroText = I18n.format("fragment.list.text.remove"),
         editMacroText = I18n.format("edit");
-        private final String
+        public final String
         enabledText = I18n.format("enabled"),
         disabledText = I18n.format("disabled");
-        private boolean enabledInLayer;
-        private boolean deleted = false;
+        public boolean enabledInLayer;
+        public boolean deleted = false;
 
-        private KeyEntry(Macro macro) {
+        public KeyEntry(Macro macro) {
             this.macro = macro;
 
             this.btnChangeKeyBinding = new GuiButton(0, 0, 0, 75, 20, macro.command.toString());
@@ -108,7 +146,11 @@ public class MacroListFragment extends GuiListExtended {
             if (currentLayerulid == null) {
                 this.btnChangeKeyBinding.x = x + 95;
                 this.btnChangeKeyBinding.y = y;
-                this.btnChangeKeyBinding.displayString = GameSettings.getKeyDisplayString(this.macro.keyCode);
+                if((this.macro.flags&Macro.FLAG_RADIAL) > 0) {
+                    this.btnChangeKeyBinding.displayString = this.macro.radialKey;
+                } else {
+                    this.btnChangeKeyBinding.displayString = GameSettings.getKeyDisplayString(this.macro.keyCode);
+                }
 
                 this.btnEdit.x = x + 170;
                 this.btnEdit.y = y;
@@ -160,9 +202,12 @@ public class MacroListFragment extends GuiListExtended {
                 return true;
             }
             if (this.btnChangeKeyBinding.mousePressed(mc, mouseX, mouseY)) {
-                guiMacroManagement.macroModify = this.macro;
-
-                return true;
+                if((this.macro.flags&Macro.FLAG_RADIAL) == 0) {
+                    guiMacroManagement.macroModify = this.macro;
+                    return true;
+                } else {
+                    return false;
+                }
             }
             if (this.btnRemoveKeyBinding.mousePressed(mc, mouseX, mouseY)) {
                 try {

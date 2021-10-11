@@ -24,7 +24,8 @@ public class BindingsRepository {
 	private File bindingFile;
 
 	private UUID activeLayer;
-	private HashMap<Integer, ArrayList<Macro>> macros;
+	public HashMap<Integer, ArrayList<Macro>> keyMacros;
+	public HashMap<String, ArrayList<Macro>> radialMacros;
 	private ArrayList<Layer> layers;
 
 	/**
@@ -58,16 +59,12 @@ public class BindingsRepository {
 	* @return list of all layers
 	*/
 	public ArrayList<Layer> getLayers(boolean sync) {
-		if (sync)
-		// if specified to update memory with latest changes
-		loadConfiguration();
+		if (sync) loadConfiguration();
 
 		return this.layers;
 	}
 	public Layer getLayer(UUID ulid, boolean sync) {
-		if (sync)
-		// if specified to update memory with latest changes
-			loadConfiguration();
+		if (sync) loadConfiguration();
 
 		if(ulid == null) return null;
 
@@ -90,8 +87,7 @@ public class BindingsRepository {
 	* @return the layer found, may be null
 	*/
 	public Layer getActiveLayer(boolean sync) {
-		if (sync)
-		loadConfiguration();
+		if (sync) loadConfiguration();
 
 		for(Layer layer : layers) {
 			if(layer.ulid.equals(activeLayer)) {
@@ -111,10 +107,7 @@ public class BindingsRepository {
 	public void addLayer(Layer layer, boolean sync) {
 		this.layers.add(layer);
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
 	/**
@@ -132,12 +125,9 @@ public class BindingsRepository {
 			}
 		}
 
-		if (this.activeLayer.equals(ulid)) this.setActiveLayer(null, false);
+		if (this.activeLayer != null && this.activeLayer.equals(ulid)) this.setActiveLayer(null, false);
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
 
@@ -159,10 +149,7 @@ public class BindingsRepository {
 		activeLayer = ret == null ? null : ret.ulid;
 
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 		return ret;
 	}
 
@@ -173,12 +160,17 @@ public class BindingsRepository {
 	* @return list of all macros
 	*/
 	public HashMap<Integer, ArrayList<Macro>> getMacros(boolean sync) {
-		if (sync)
-		// if specified to update memory with latest changes
-		loadConfiguration();
+		if (sync) loadConfiguration();
 
-		return this.macros;
+		return this.keyMacros;
 	}
+
+	public HashMap<String, ArrayList<Macro>> getRadialMacros(boolean sync) {
+		if (sync) loadConfiguration();
+
+		return this.radialMacros;
+	}
+
 
 	/**
 	* Find active macro's by its keycode
@@ -188,11 +180,9 @@ public class BindingsRepository {
 	* @return list of active macro's with the given keyCode as trigger, or null if none exist
 	*/
 	public ArrayList<Macro> findMacroByKeycode(int keyCode, Layer layer, boolean sync) {
-		if (sync)
-		// if specified to update memory with latest changes
-		loadConfiguration();
+		if (sync) loadConfiguration();
 
-		ArrayList<Macro> ms = this.macros.get(keyCode);
+		ArrayList<Macro> ms = this.keyMacros.get(keyCode);
 		if(layer == null || ms == null) {
 			return ms;
 		} else {
@@ -213,34 +203,44 @@ public class BindingsRepository {
 	* @param sync  update file after adding macro
 	*/
 	public void addMacro(Macro macro, boolean sync) {
-		ArrayList<Macro> ms = this.macros.get(macro.keyCode);
+		ArrayList<Macro> ms;
+		if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+			ms = this.radialMacros.get(macro.radialKey);
+		} else {
+			ms = this.keyMacros.get(macro.keyCode);
+		}
 		if(ms == null) {
 			ms = new ArrayList<Macro>();
-			this.macros.put(macro.keyCode, ms);
+			if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+				this.radialMacros.put(macro.radialKey, ms);
+			} else {
+				this.keyMacros.put(macro.keyCode, ms);
+			}
 		}
 		ms.add(macro);
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
 	public void changeMacroKeyCode(Macro macro, int newKeyCode, boolean sync) {
-		if(macro.keyCode == newKeyCode) return;
-
-		ArrayList<Macro> ms = this.macros.get(macro.keyCode);
-		ArrayList<Macro> ns = this.macros.get(newKeyCode);
+		ArrayList<Macro> ms;
+		if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+			ms = this.radialMacros.get(macro.radialKey);
+			macro.flags ^= Macro.FLAG_RADIAL;
+		} else {
+			ms = this.keyMacros.get(macro.keyCode);
+		}
+		ArrayList<Macro> ns = this.keyMacros.get(newKeyCode);
 
 		for(int i = 0; i < ms.size(); i++) {
 			Macro m = ms.get(i);
 			if(m == macro) {
 				ms.remove(i);
 				if(ms.size() == 0) {
-					macros.remove(macro.keyCode);
+					this.keyMacros.remove(macro.keyCode);
 				}
 				if(ns == null) {
 					ns = new ArrayList<Macro>();
-					this.macros.put(newKeyCode, ns);
+					this.keyMacros.put(newKeyCode, ns);
 				}
 				macro.keyCode = newKeyCode;
 				ns.add(macro);
@@ -248,12 +248,38 @@ public class BindingsRepository {
 			}
 		}
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
+	public void changeMacroRadialKey(Macro macro, String newRadialKey, boolean sync) {
+		ArrayList<Macro> ms;
+		if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+			ms = this.radialMacros.get(macro.radialKey);
+		} else {
+			ms = this.keyMacros.get(macro.keyCode);
+			macro.flags ^= Macro.FLAG_RADIAL;
+		}
+		ArrayList<Macro> ns = this.radialMacros.get(newRadialKey);
+
+		for(int i = 0; i < ms.size(); i++) {
+			Macro m = ms.get(i);
+			if(m == macro) {
+				ms.remove(i);
+				if(ms.size() == 0) {
+					this.keyMacros.remove(macro.keyCode);
+				}
+				if(ns == null) {
+					ns = new ArrayList<Macro>();
+					this.radialMacros.put(newRadialKey, ns);
+				}
+				macro.radialKey = newRadialKey;
+				ns.add(macro);
+				break;
+			}
+		}
+
+		if (sync) saveConfiguration();
+	}
 
 	/**
 	* Remove Macro by UUID
@@ -262,14 +288,23 @@ public class BindingsRepository {
 	* @param sync    update file after adding macro
 	*/
 	public void deleteMacro(Macro macro, boolean sync) {
-		ArrayList<Macro> ms = macros.get(macro.keyCode);
+		ArrayList<Macro> ms;
+		if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+			ms = this.radialMacros.get(macro.radialKey);
+		} else {
+			ms = this.keyMacros.get(macro.keyCode);
+		}
 
 		for(int i = 0; i < ms.size(); i++) {
 			Macro m = ms.get(i);
 			if(m == macro) {
 				ms.remove(i);
 				if(ms.size() == 0) {
-					macros.remove(macro.keyCode);
+					if((macro.flags&Macro.FLAG_RADIAL) > 0) {
+						this.radialMacros.remove(macro.radialKey);
+					} else {
+						this.keyMacros.remove(macro.keyCode);
+					}
 				}
 				break;
 			}
@@ -279,10 +314,7 @@ public class BindingsRepository {
 			layer.macros.remove(macro.umid);
 		}
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
 	/**
@@ -294,10 +326,7 @@ public class BindingsRepository {
 	public void setActiveLayer(UUID ulid, boolean sync) {
 		this.activeLayer = ulid;
 
-		if (sync) {
-			// if specified to update configuration
-			saveConfiguration();
-		}
+		if (sync) saveConfiguration();
 	}
 
 
@@ -329,14 +358,28 @@ public class BindingsRepository {
 	public void saveConfiguration() {
 		ByteBuf buffer = Unpooled.buffer();
 		try {
-			buffer.writeInt(3);//version
+			buffer.writeInt(4);//version
 			writeString(buffer, activeLayer == null ? "" : activeLayer.toString());
 
-			buffer.writeInt(macros.size());
-			for (Map.Entry<Integer, ArrayList<Macro>> entry : macros.entrySet()) {
+			buffer.writeInt(this.keyMacros.size());
+			for (Map.Entry<Integer, ArrayList<Macro>> entry : this.keyMacros.entrySet()) {
 				int keycode = entry.getKey();
 				ArrayList<Macro> ms = entry.getValue();
 				buffer.writeInt(keycode);
+				buffer.writeInt(ms.size());
+				for(int i = 0; i < ms.size(); i++) {
+					Macro macro = ms.get(i);
+					writeString(buffer, macro.umid.toString());
+					writeString(buffer, macro.command);
+					buffer.writeInt(macro.flags);
+				}
+			}
+
+			buffer.writeInt(this.radialMacros.size());
+			for (Map.Entry<String, ArrayList<Macro>> entry : this.radialMacros.entrySet()) {
+				String radialKey = entry.getKey();
+				ArrayList<Macro> ms = entry.getValue();
+				writeString(buffer, radialKey);
 				buffer.writeInt(ms.size());
 				for(int i = 0; i < ms.size(); i++) {
 					Macro macro = ms.get(i);
@@ -370,8 +413,9 @@ public class BindingsRepository {
 
 	public void setDefaultConfiguration() {
 		activeLayer = null;
-		macros = new HashMap<Integer, ArrayList<Macro>>();
-		layers = new ArrayList<Layer>();
+		this.keyMacros = new HashMap<Integer, ArrayList<Macro>>();
+		this.radialMacros = new HashMap<String, ArrayList<Macro>>();
+		this.layers = new ArrayList<Layer>();
 	}
 
 	public void loadConfiguration() {
@@ -384,26 +428,39 @@ public class BindingsRepository {
 			buffer.writeBytes(new FileInputStream(bindingFile), (int)bindingFile.length());
 
 			int version = buffer.readInt();
-			if(version != 3) {
-				setDefaultConfiguration();
-				return;
-			}
-			String str = readString(buffer);
-			if(str == null) {
-				setDefaultConfiguration();
-				return;
-			}
-			if(str.equals("")) {
-				activeLayer = null;
+			if(version == 3) {
+				loadConfigurationV3(buffer);
+			} else if(version == 4) {
+				loadConfigurationV4(buffer);
 			} else {
-				activeLayer = UUID.fromString(str);//throws if invalid
+				setDefaultConfiguration();
 			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			setDefaultConfiguration();
+		} finally {
+			buffer.release();
+		}
+	}
 
-			int s = buffer.readInt();
-			macros = new HashMap<Integer, ArrayList<Macro>>(Math.max(16, s));
-			for (int i = 0; i < s; i++) {
-				int keycode = buffer.readInt();
-				int macros_size = buffer.readInt();
+	public void loadConfigurationV4(ByteBuf buffer) {
+		String str = readString(buffer);
+		if(str == null) {
+			setDefaultConfiguration();
+			return;
+		}
+		if(str.equals("")) {
+			activeLayer = null;
+		} else {
+			activeLayer = UUID.fromString(str);//throws if invalid
+		}
+
+		int s = buffer.readInt();
+		this.keyMacros = new HashMap<Integer, ArrayList<Macro>>(Math.max(16, s));
+		for (int i = 0; i < s; i++) {
+			int keycode = buffer.readInt();
+			int macros_size = buffer.readInt();
+			if(macros_size > 0) {
 				ArrayList<Macro> macro_list = new ArrayList<Macro>(macros_size);
 				for(int j = 0; j < macros_size; j++) {
 					Macro macro = new Macro();
@@ -422,41 +479,132 @@ public class BindingsRepository {
 					macro.keyCode = keycode;
 					macro_list.add(macro);
 				}
-				macros.put(keycode, macro_list);
+				this.keyMacros.put(keycode, macro_list);
 			}
+		}
 
-			s = buffer.readInt();
-			layers = new ArrayList<Layer>(s);
-			for (int i = 0; i < s; i++) {
-				Layer layer = new Layer();
-				str = readString(buffer);
-				if(str == null) {
-					setDefaultConfiguration();
-					return;
-				}
-				layer.ulid = UUID.fromString(str);//throws if invalid
-				layer.displayName = readString(buffer);
-				if(layer.displayName == null) {
-					setDefaultConfiguration();
-					return;
-				}
-				int macros_size = buffer.readInt();
+		s = buffer.readInt();
+		this.radialMacros = new HashMap<String, ArrayList<Macro>>(Math.max(16, s));
+		for (int i = 0; i < s; i++) {
+			String radialKey = readString(buffer);
+			int macros_size = buffer.readInt();
+			if(macros_size > 0) {
+				ArrayList<Macro> macro_list = new ArrayList<Macro>(macros_size);
 				for(int j = 0; j < macros_size; j++) {
+					Macro macro = new Macro();
 					str = readString(buffer);
 					if(str == null) {
 						setDefaultConfiguration();
 						return;
 					}
-					layer.macros.add(UUID.fromString(str));//throws if invalid
+					macro.umid = UUID.fromString(str);//throws if invalid
+					macro.command = readString(buffer);
+					if(macro.command == null) {
+						setDefaultConfiguration();
+						return;
+					}
+					macro.flags = buffer.readInt();
+					macro.radialKey = radialKey;
+					macro_list.add(macro);
 				}
-				layers.add(layer);
+				this.radialMacros.put(radialKey, macro_list);
 			}
+		}
 
-		} catch(Exception e) {
-			e.printStackTrace();
+		s = buffer.readInt();
+		this.layers = new ArrayList<Layer>(s);
+		for (int i = 0; i < s; i++) {
+			Layer layer = new Layer();
+			str = readString(buffer);
+			if(str == null) {
+				setDefaultConfiguration();
+				return;
+			}
+			layer.ulid = UUID.fromString(str);//throws if invalid
+			layer.displayName = readString(buffer);
+			if(layer.displayName == null) {
+				setDefaultConfiguration();
+				return;
+			}
+			int macros_size = buffer.readInt();
+			for(int j = 0; j < macros_size; j++) {
+				str = readString(buffer);
+				if(str == null) {
+					setDefaultConfiguration();
+					return;
+				}
+				layer.macros.add(UUID.fromString(str));//throws if invalid
+			}
+			layers.add(layer);
+		}
+	}
+
+
+	public void loadConfigurationV3(ByteBuf buffer) {
+		String str = readString(buffer);
+		if(str == null) {
 			setDefaultConfiguration();
-		} finally {
-			buffer.release();
+			return;
+		}
+		if(str.equals("")) {
+			activeLayer = null;
+		} else {
+			activeLayer = UUID.fromString(str);//throws if invalid
+		}
+
+		int s = buffer.readInt();
+		this.keyMacros = new HashMap<Integer, ArrayList<Macro>>(Math.max(16, s));
+		for (int i = 0; i < s; i++) {
+			int keycode = buffer.readInt();
+			int macros_size = buffer.readInt();
+			ArrayList<Macro> macro_list = new ArrayList<Macro>(macros_size);
+			for(int j = 0; j < macros_size; j++) {
+				Macro macro = new Macro();
+				str = readString(buffer);
+				if(str == null) {
+					setDefaultConfiguration();
+					return;
+				}
+				macro.umid = UUID.fromString(str);//throws if invalid
+				macro.command = readString(buffer);
+				if(macro.command == null) {
+					setDefaultConfiguration();
+					return;
+				}
+				macro.flags = buffer.readInt();
+				macro.keyCode = keycode;
+				macro_list.add(macro);
+			}
+			this.keyMacros.put(keycode, macro_list);
+		}
+
+		this.radialMacros = new HashMap<String, ArrayList<Macro>>();
+
+		s = buffer.readInt();
+		this.layers = new ArrayList<Layer>(s);
+		for (int i = 0; i < s; i++) {
+			Layer layer = new Layer();
+			str = readString(buffer);
+			if(str == null) {
+				setDefaultConfiguration();
+				return;
+			}
+			layer.ulid = UUID.fromString(str);//throws if invalid
+			layer.displayName = readString(buffer);
+			if(layer.displayName == null) {
+				setDefaultConfiguration();
+				return;
+			}
+			int macros_size = buffer.readInt();
+			for(int j = 0; j < macros_size; j++) {
+				str = readString(buffer);
+				if(str == null) {
+					setDefaultConfiguration();
+					return;
+				}
+				layer.macros.add(UUID.fromString(str));//throws if invalid
+			}
+			layers.add(layer);
 		}
 	}
 

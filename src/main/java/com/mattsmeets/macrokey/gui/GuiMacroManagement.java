@@ -39,14 +39,12 @@ public class GuiMacroManagement extends GuiScreen {
             layerEditor,
             layerSwitcher;
 
-    private int currentSelectedLayer;
     private ArrayList<Layer> layers;
 
     private volatile boolean updateList = false;
 
     public GuiMacroManagement(GuiScreen screen) {
         this.parentScreen = screen;
-        this.currentSelectedLayer = -1;
     }
 
     @Override
@@ -77,18 +75,13 @@ public class GuiMacroManagement extends GuiScreen {
                 this.mc.displayGuiScreen(this.parentScreen);
                 break;
             case 1:
-                this.mc.displayGuiScreen(new GuiModifyMacro(this));
+                this.mc.displayGuiScreen(new GuiModifyMacro(this, null));
                 break;
             case 2:
                 this.mc.displayGuiScreen(new GuiLayerManagement(this));
                 break;
             case 3:
-                if (this.currentSelectedLayer < this.layers.size() - 1) {
-                    this.currentSelectedLayer++;
-                } else {
-                    this.currentSelectedLayer = -1;
-                }
-
+                instance.bindingsRepository.setNextActiveLayer(true);
                 this.updateList = true;
                 break;
         }
@@ -112,30 +105,17 @@ public class GuiMacroManagement extends GuiScreen {
     public void updateScreen() {
         super.updateScreen();
 
-        if (!this.updateList) {
-            return;
-        }
+        if (!this.updateList) return;
+        this.updateList = false;
 
-        try {
-            this.layers = instance.bindingsRepository.getLayers(true);
+        Layer currentLayer = instance.bindingsRepository.getActiveLayer(true);
 
-            Layer currentLayer;
-            if(currentSelectedLayer == -1 || currentSelectedLayer >= this.layers.size()) {
-                currentSelectedLayer = -1;
-                currentLayer = null;
-            } else {
-                currentLayer = this.layers.get(currentSelectedLayer);
-            }
+        this.macroListFragment = new MacroListFragment(this, currentLayer == null ? null : currentLayer.ulid);
 
-            this.macroListFragment = new MacroListFragment(this, currentLayer == null ? null : currentLayer.ulid);
-
-            this.layerSwitcher.displayString =
-                    I18n.format("text.layer.display",
-                            currentLayer == null ? this.layerMasterText : currentLayer.displayName
-                    );
-        } finally {
-            this.updateList = false;
-        }
+        this.layerSwitcher.displayString =
+            I18n.format("text.layer.display",
+                currentLayer == null ? this.layerMasterText : currentLayer.displayName
+            );
     }
 
     @Override

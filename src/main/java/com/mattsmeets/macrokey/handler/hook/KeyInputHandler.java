@@ -2,9 +2,7 @@ package com.mattsmeets.macrokey.handler.hook;
 
 import com.mattsmeets.macrokey.config.ModConfig;
 import com.mattsmeets.macrokey.MacroKey;
-import com.mattsmeets.macrokey.event.ExecuteOnTickEvent;
 import com.mattsmeets.macrokey.model.Macro;
-import com.mattsmeets.macrokey.model.lambda.ExecuteOnTickInterface;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -31,7 +29,6 @@ public class KeyInputHandler {
     private final ArrayList<Macro> macrosToRun = new ArrayList<Macro>();
     private final ArrayList<Macro> macrosToRepeat = new ArrayList<Macro>();
 
-    private final Set<ExecuteOnTickInterface> executorsToRun = new HashSet<>();
     private int delta = 0;
 
 
@@ -43,7 +40,14 @@ public class KeyInputHandler {
         // find if the current key being pressed is the dedicated
         // MacroKey gui button. If so, open its GUI
         if (instance.forgeKeybindings[0].isPressed()) {
-            MinecraftForge.EVENT_BUS.post(new ExecuteOnTickEvent(ExecuteOnTickInterface.openMacroKeyGUI));
+            Minecraft.getMinecraft().player.openGui(
+                instance,
+                ModConfig.guiMacroManagementId,
+                Minecraft.getMinecraft().world,
+                (int) Minecraft.getMinecraft().player.posX,
+                (int) Minecraft.getMinecraft().player.posY,
+                (int) Minecraft.getMinecraft().player.posZ
+            );
         }
 
         // find all macro's by the current key pressed, while not syncing
@@ -52,33 +56,34 @@ public class KeyInputHandler {
         // if the list is not empty
         if (macros == null || macros.size() == 0)  return;
 
-        if (Keyboard.getEventKeyState() && !this.pressedKeys.contains(keyCode)) {
-            /*
-             * if the key has not been pressed during last events, send
-             * an event, and add it to the current index of pressed keys
-             */
-            if(this.toggleKeys.contains(keyCode)) {
-                this.toggleKeys.remove(keyCode);
+        if (Keyboard.getEventKeyState()) {
+
+            if(this.pressedKeys.contains(keyCode)) {//in case we miss a keyboard event
+                onKeyEvent(false, macros, keyCode);
             } else {
-                this.toggleKeys.add(keyCode);
+                this.pressedKeys.add(keyCode);
             }
-            this.pressedKeys.add(keyCode);
-            onKeyEvent(true, macros);
-        } else if (!Keyboard.getEventKeyState() && this.pressedKeys.contains(keyCode)) {
-            /*
-             * if the key has been pressed during last events, send
-             * an event, and remove it from the current index of pressed keys
-             */
-            this.pressedKeys.remove(keyCode);
-            onKeyEvent(false, macros);
-        }//NOTE: this may break if a key is held down while it is added as a macro
+
+            onKeyEvent(true, macros, keyCode);
+        } else {
+
+            if(!this.pressedKeys.contains(keyCode)) {//in case we miss a keyboard event
+                onKeyEvent(true, macros, keyCode);
+            } else {
+                this.pressedKeys.remove(keyCode);
+            }
+
+            onKeyEvent(false, macros, keyCode);
+        }
+        //NOTE: radial menu popups always cause us to miss keyboard events
     }
 
-    public void onKeyEvent(boolean ispressed, ArrayList<Macro> macros) {
+    public void onKeyEvent(boolean ispressed, ArrayList<Macro> macros, int keyCode) {
         //NOTE: this code can break if a repeat macro is changed while a key is being held down
+        int usedKeys = 1;
         for(Macro macro : macros) {
-            boolean cancelled = (macro.flags&Macro.FLAG_ACTIVE) == 0
-                || ((macro.flags&Macro.FLAG_SHIFT_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+            boolean cancelled =
+                ((macro.flags&Macro.FLAG_SHIFT_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
                 || ((macro.flags&Macro.FLAG_SHIFT_UP) > 0 && Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
                 || ((macro.flags&Macro.FLAG_CTRL_DOWN) > 0 && !Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
                 || ((macro.flags&Macro.FLAG_CTRL_UP) > 0 && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
@@ -87,6 +92,11 @@ public class KeyInputHandler {
                 || ((macro.flags&Macro.FLAG_NOTONEVEN) > 0 && !toggleKeys.contains(macro.keyCode))
                 || ((macro.flags&Macro.FLAG_NOTONODD) > 0 && toggleKeys.contains(macro.keyCode));
             if(cancelled) continue;
+            if(ispressed) {
+                if((macro.flags&Macro.FLAG_SHIFT_DOWN) > 0 || (macro.flags&Macro.FLAG_SHIFT_UP) > 0) usedKeys |= 1<<1;
+                if((macro.flags&Macro.FLAG_CTRL_DOWN) > 0 ||(macro.flags&Macro.FLAG_CTRL_UP) > 0) usedKeys |= 1<<2;
+                if((macro.flags&Macro.FLAG_ALT_DOWN) > 0 || (macro.flags&Macro.FLAG_ALT_UP) > 0) usedKeys |= 1<<3;
+            }
 
             if((macro.flags&Macro.FLAG_ONDOWN) > 0) {
                 if(ispressed) {
@@ -110,21 +120,12 @@ public class KeyInputHandler {
                 }
             }
         }
-    }
-
-    @SubscribeEvent
-    public void onExecutorEvent(ExecuteOnTickEvent event) {
-        executorsToRun.add(event.getExecutor());
-    }
 
 
-    public void execute(Macro macro, EntityPlayerSP player) {
-        // send command or text to server. For the time being it is
-        // not possible to execute client-only commands. Tested and its
-        // cool that the mod can bind its own GUI to different keys
-        // from within the GUI, but this caused some weird issues
-        if(!macro.command.equals("")) {
-            player.sendChatMessage(macro.command);
+        if(this.toggleKeys.contains(keyCode)) {
+            this.toggleKeys.remove(keyCode);
+        } else {
+            this.toggleKeys.add(keyCode);
         }
     }
 
@@ -133,26 +134,17 @@ public class KeyInputHandler {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
 
         // check if we are in-game
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
         // every tick post an event for the normal,
         // non repeating commands to trigger
         if(macrosToRun.size() > 0) {
             Macro macro = macrosToRun.get(0);
-            execute(macro, player);
+            macro.execute(player);
             macrosToRun.remove(0);//NOTE: a ring buffer would be more efficient
         }
 
         boolean isLimited = delta >= ModConfig.repeatDelay;
-        // loop through all executors and run them.
-        this.executorsToRun
-                .forEach(executor -> executor.execute(isLimited));
-
-        // remove the command from the pending
-        // list if it is not to be re-executed
-        this.executorsToRun.clear();
 
         // rate-limiting so users can define
         // how fast a repeating command should execute
@@ -166,7 +158,7 @@ public class KeyInputHandler {
 
         for(int i = 0; i < macrosToRepeat.size(); i++) {
             Macro macro = macrosToRepeat.get(i);
-            execute(macro, player);
+            macro.execute(player);
         }
 
     }

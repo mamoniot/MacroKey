@@ -48,7 +48,7 @@ public class MacroKey {
         }
 
         this.logger.info("Hello World! Welcome to MacroKey Keybinding. Please sit back while we initialize...");
-        this.logger.debug("PreInitialization");
+        // this.logger.debug("PreInitialization");
 
         // BindingsRepository has a dependency on the bindings.json file being created
         this.bindingsRepository = new BindingsRepository(event.getModConfigurationDirectory().getAbsolutePath());
@@ -58,8 +58,8 @@ public class MacroKey {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) throws IOException {
-        this.logger.info("Getting ready to take over the world!");
-        this.logger.debug("PreInitialization");
+        // this.logger.info("Getting ready to take over the world!");
+        // this.logger.debug("PreInitialization");
 
         proxy.init();
     }

@@ -3,7 +3,7 @@ macrokey.config.title=MacroKey Keybinding Configuration
 ####
 
 ## Layer translations ##
-text.layer.display=Layer: %s
+text.layer.display=Current Layer: %s
 text.layer.hover.right_click=Right-click to open the MacroKey GUI
 text.layer.master=Master
 ####
@@ -26,8 +26,11 @@ gui.modify.text.title.edit=Edit Macro
 gui.modify.text.command=Command
 gui.modify.text.key=Trigger
 
+gui.modify.text.trigger.key=Key
+gui.modify.text.trigger.radial=Radial
+
 gui.modify.text.type=Key Style
-gui.modify.text.enable=Enable Macro
+gui.modify.text.triggertype=Trigger Type
 
 gui.modify.text.save=Save Macro
 
@@ -67,5 +70,7 @@ edit=Edit
 
 ## Vanilla Controls ##
 key.macrokey.category=MacroKey Keybinding
-key.macrokey.management.desc=Open Macro Management GUI
+key.macrokey.management.desc=Open SneakyKeys Macro Editor
+
+gui.macrokey.open=SneakyKeys Macro Editor
 ####

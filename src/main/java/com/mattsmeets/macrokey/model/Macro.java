@@ -1,14 +1,23 @@
 package com.mattsmeets.macrokey.model;
+import com.mattsmeets.macrokey.gui.GuiRadialMenu;
+import static com.mattsmeets.macrokey.MacroKey.instance;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
  * Model for Macro's (Bindings)
  */
 public class Macro {
-    public static final int FLAG_ACTIVE = 1<<0;
+    public static final int FLAG_RADIAL = 1<<0;
     public static final int FLAG_ONDOWN = 1<<1;
     public static final int FLAG_ONUP = 1<<2;
     public static final int FLAG_REPEAT_ONDOWN = 1<<3;
@@ -22,7 +31,7 @@ public class Macro {
     public static final int FLAG_ALT_DOWN = 1<<20;
     public static final int FLAG_ALT_UP = 1<<21;
 
-    public int flags = FLAG_ONDOWN | FLAG_ACTIVE;
+    public int flags = FLAG_ONDOWN;
 
     /**
      * Unique Macro Identifier
@@ -41,6 +50,7 @@ public class Macro {
     public String command = "";
 
     public int keyCode = 0;//NOTE: if this macro is saved then only change this value through changeMacroKeyCode
+    public String radialKey = "";//NOTE: if this macro is saved then only change this value through changeMacroKeyCode
 
     // public Macro() {
     //     this.umid = UUID.randomUUID();
@@ -52,5 +62,25 @@ public class Macro {
         ret.command = this.command;
         ret.keyCode = this.keyCode;
         return ret;
+    }
+
+
+    public void execute(EntityPlayerSP player) {
+        // send command or text to server. For the time being it is
+        // not possible to execute client-only commands. Tested and its
+        // cool that the mod can bind its own GUI to different keys
+        // from within the GUI, but this caused some weird issues
+        String command = this.command;
+        if(!command.equals("")) {
+            if(command.startsWith("/radial ")) {
+                String radialKey = command.substring(8);
+                ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(radialKey);
+                if(macros != null) {
+                    Minecraft.getMinecraft().displayGuiScreen(new GuiRadialMenu((ArrayList<Macro>)macros.clone()));
+                }
+            } else {
+                player.sendChatMessage(command);
+            }
+        }
     }
 }

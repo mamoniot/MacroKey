@@ -1,7 +1,6 @@
 package com.mattsmeets.macrokey.gui;
 
 import com.mattsmeets.macrokey.model.Macro;
-import com.mattsmeets.macrokey.model.StringCommand;
 import com.mattsmeets.macrokey.MacroKey;
 
 import net.minecraft.client.gui.GuiButton;
@@ -18,25 +17,25 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class GuiModifyMacro extends GuiScreen {
-    private final GuiScreen parentScreen;
+    public final GuiScreen parentScreen;
 
-    private static final String
+    public static final String
             defaultScreenTitleText = I18n.format("gui.modify.text.title.new"),
             editScreenTitleText = I18n.format("gui.modify.text.title.edit"),
             TypeText = I18n.format("gui.modify.text.type"),
-            enableCommandText = I18n.format("gui.modify.text.enable"),
+            TriggerTypeText = I18n.format("gui.modify.text.triggertype"),
             toggleText = I18n.format("gui.modify.text.toggle"),
             commandBoxTitleText = I18n.format("gui.modify.text.command"),
             keyBoxTitleText = I18n.format("gui.modify.text.key"),
             saveButtonText = I18n.format("gui.modify.text.save");
 
-    private static final String
+    public static final String
             ignoreText = I18n.format("gui.modify.text.ignore"),
             ShiftText = I18n.format("gui.modify.text.shift"),
             CtrlText = I18n.format("gui.modify.text.ctrl"),
             AltText = I18n.format("gui.modify.text.alt"),
-            enabledText = I18n.format("enabled"),
-            disabledText = I18n.format("disabled"),
+            radialText = I18n.format("gui.modify.text.trigger.radial"),
+            keyText = I18n.format("gui.modify.text.trigger.key"),
             downText = I18n.format("gui.modify.text.down"),
             upText = I18n.format("gui.modify.text.up"),
             repeatText = I18n.format("gui.modify.text.repeat"),
@@ -45,17 +44,17 @@ public class GuiModifyMacro extends GuiScreen {
             secondText = I18n.format("gui.modify.text.second"),
             cancelText = I18n.format("gui.cancel");
 
-    private boolean existing;
-    private final Macro result;//NOTE: this macro is only registered if existing = true;
+    public boolean existing;
+    public final Macro result;//NOTE: this macro is only registered if existing = true;
 
-    private GuiTextField command;
+    public GuiTextField command, radialKey;
 
-    private GuiButton btnKeyBinding;
-    private GuiButton commandActive, commandType, commandToggle;
-    private GuiButton addButton, cancelButton;
-    private GuiButton shiftButton, ctrlButton, altButton;
+    public GuiButton btnKeyBinding;
+    public GuiButton commandType, commandButtonType, commandToggle;
+    public GuiButton addButton, cancelButton;
+    public GuiButton shiftButton, ctrlButton, altButton;
 
-    private boolean changingKey = false;
+    public boolean changingKey = false;
 
     public GuiModifyMacro(GuiScreen guiScreen, Macro key) {
         // does the macro already exist, if not create a new one
@@ -70,10 +69,6 @@ public class GuiModifyMacro extends GuiScreen {
         this.parentScreen = guiScreen;
     }
 
-    public GuiModifyMacro(GuiScreen guiScreen) {
-        this(guiScreen, null);
-    }
-
     @Override
     public void initGui() {
         super.initGui();
@@ -82,8 +77,8 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.buttonList.add(this.btnKeyBinding = new GuiButton(3, this.width/2 - 75, 100, 150, 20, GameSettings.getKeyDisplayString(0)));
 
-        this.buttonList.add(this.commandActive = new GuiButton(5, this.width/2 - 75, 130, 57, 20, enabledText));
-        this.buttonList.add(this.commandType = new GuiButton(4, this.width/2 - 75, 152, 57, 20, downText));
+        this.buttonList.add(this.commandType = new GuiButton(5, this.width/2 - 75, 130, 57, 20, keyText));
+        this.buttonList.add(this.commandButtonType = new GuiButton(4, this.width/2 - 75, 152, 57, 20, downText));
         this.buttonList.add(this.commandToggle = new GuiButton(6, this.width/2 - 75, 174, 57, 20, bothText));
 
         this.buttonList.add(this.shiftButton = new GuiButton(11, this.width/2 + 19, 130, 57, 20, ignoreText));
@@ -92,22 +87,41 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.command = new GuiTextField(9, this.fontRenderer, this.width/2 - 100, 50, 200, 20);
         this.command.setFocused(true);
-        this.command.setMaxStringLength(Integer.MAX_VALUE);
+        this.command.setMaxStringLength(5555);
+
+        this.radialKey = new GuiTextField(9, this.fontRenderer, this.width/2 - 75, 100, 150, 20);
+        this.radialKey.setMaxStringLength(15);
 
         if (this.existing) {
             this.command.setText(this.result.command.toString());
+            setKeyText();
+
             int flags = this.result.flags;
 
-            this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(result.keyCode);
-
-            this.commandActive.displayString = (flags&Macro.FLAG_ACTIVE) > 0 ? enabledText : disabledText;
-            if((flags&Macro.FLAG_ONDOWN) > 0) {
-                this.commandType.displayString = downText;
-            } else if((flags&Macro.FLAG_ONUP) > 0) {
-                this.commandType.displayString = upText;
-            } else if((flags&Macro.FLAG_REPEAT_ONDOWN) > 0) {
-                this.commandType.displayString = repeatText;
+            if((flags&Macro.FLAG_RADIAL) > 0) {
+                this.commandType.displayString = radialText;
+                this.commandButtonType.enabled = false;
+                this.commandToggle.enabled = false;
+                this.shiftButton.enabled = false;
+                this.ctrlButton.enabled = false;
+                this.altButton.enabled = false;
+            } else {
+                this.commandType.displayString = keyText;
+                this.commandButtonType.enabled = true;
+                this.commandToggle.enabled = true;
+                this.shiftButton.enabled = true;
+                this.ctrlButton.enabled = true;
+                this.altButton.enabled = true;
             }
+
+            if((flags&Macro.FLAG_ONDOWN) > 0) {
+                this.commandButtonType.displayString = downText;
+            } else if((flags&Macro.FLAG_ONUP) > 0) {
+                this.commandButtonType.displayString = upText;
+            } else if((flags&Macro.FLAG_REPEAT_ONDOWN) > 0) {
+                this.commandButtonType.displayString = repeatText;
+            }
+
             if((flags&Macro.FLAG_NOTONEVEN) > 0) {
                 this.commandToggle.displayString = firstText;
             } else if((flags&Macro.FLAG_NOTONODD) > 0) {
@@ -136,6 +150,7 @@ public class GuiModifyMacro extends GuiScreen {
         super.actionPerformed(button);
         if(button.id == 0) {
             this.result.command = command.getText();
+
             if(!this.existing) {
                 this.existing = true;
                 MacroKey.instance.bindingsRepository.addMacro(this.result, true);
@@ -160,22 +175,27 @@ public class GuiModifyMacro extends GuiScreen {
         this.addButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.cancelButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
 
-        // draw keycode as keyboard key
-        this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(this.result.keyCode);
 
-        // this.commandType.displayString = this.result.type == Macro.REPEAT_ONDOWN ? enabledText : disabledText;
-        // this.commandActive.displayString = this.result.active ? enabledText : disabledText;
+        // this.commandButtonType.displayString = this.result.type == Macro.REPEAT_ONDOWN ? radialText : keyText;
+        // this.commandType.displayString = this.result.active ? radialText : keyText;
 
-        this.commandActive.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
+        this.command.drawTextBox();
+
+        if((this.result.flags&Macro.FLAG_RADIAL) > 0) {
+            this.radialKey.drawTextBox();
+        } else {
+            this.btnKeyBinding.drawButton(mc, mouseX, mouseY, 0.0f);
+        }
+
         this.commandType.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
+        this.commandButtonType.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.commandToggle.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.shiftButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.ctrlButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
         this.altButton.drawButton(parentScreen.mc, mouseX, mouseY, 0.0f);
 
-        this.command.drawTextBox();
 
-        this.drawString(this.fontRenderer, enableCommandText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(enableCommandText), 136, -6250336);
+        this.drawString(this.fontRenderer, TriggerTypeText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(TriggerTypeText), 136, -6250336);
         this.drawString(this.fontRenderer, TypeText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(TypeText), 158, -6250336);
         this.drawString(this.fontRenderer, toggleText, this.width/2 - 78 - mc.fontRenderer.getStringWidth(toggleText), 180, -6250336);
 
@@ -185,29 +205,8 @@ public class GuiModifyMacro extends GuiScreen {
 
 
         this.drawCenteredString(this.fontRenderer, commandBoxTitleText, this.width/2, 37, -6250336);
-        this.drawCenteredString(this.fontRenderer, keyBoxTitleText, this.width/2, 90, -6250336);
+        this.drawCenteredString(this.fontRenderer, keyBoxTitleText, this.width/2, 88, -6250336);
 
-        this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(this.result.keyCode);
-
-
-        if (this.changingKey) {
-            this.btnKeyBinding.displayString = TextFormatting.WHITE + "> " + TextFormatting.YELLOW + this.btnKeyBinding.displayString + TextFormatting.WHITE + " <";
-        } else {
-            if (this.result.keyCode != 0) {
-                boolean macroKeyCodeModifyFlag = false;
-                for (KeyBinding keybinding : mc.gameSettings.keyBindings) {
-                    if (keybinding.getKeyCode() == this.result.keyCode) {
-                        macroKeyCodeModifyFlag = true;
-                        break;
-                    }
-                }
-                if (macroKeyCodeModifyFlag) {
-                    this.btnKeyBinding.displayString = TextFormatting.GOLD + this.btnKeyBinding.displayString;
-                }
-            }
-        }
-
-        this.btnKeyBinding.drawButton(mc, mouseX, mouseY, 0.0f);
     }
 
     @Override
@@ -221,24 +220,39 @@ public class GuiModifyMacro extends GuiScreen {
             } else if (typedChar > 0) {
                 newCode = typedChar + 256;
             }
-            if(this.existing) {
-                if(newCode != -1) MacroKey.instance.bindingsRepository.changeMacroKeyCode(this.result, newCode, false);
-            } else {
-                this.result.keyCode = newCode;
+            if(newCode != -1) {
+                if(this.existing) {
+                    MacroKey.instance.bindingsRepository.changeMacroKeyCode(this.result, newCode, false);
+                } else {
+                    this.result.keyCode = newCode;
+                }
             }
 
             this.changingKey = false;
-
-            return;
-        }
-
-        if (this.command.isFocused()) {
-            if (keyCode == Keyboard.KEY_ESCAPE)
-                this.command.setFocused(false);
-
-            this.command.textboxKeyTyped(typedChar, keyCode);
+            setKeyText();
         } else {
-            super.keyTyped(typedChar, keyCode);
+            if (this.command.isFocused()) {
+                if (keyCode == Keyboard.KEY_ESCAPE) this.command.setFocused(false);
+
+                this.command.textboxKeyTyped(typedChar, keyCode);
+            } else if (this.radialKey.isFocused()) {
+                if (keyCode == Keyboard.KEY_ESCAPE) this.radialKey.setFocused(false);
+
+                this.radialKey.textboxKeyTyped(typedChar, keyCode);
+
+                if((this.result.flags&Macro.FLAG_RADIAL) > 0) {
+                    String str = radialKey.getText();
+                    if(this.existing) {
+                        MacroKey.instance.bindingsRepository.changeMacroRadialKey(this.result, str, false);
+                    } else {
+                        this.result.radialKey = str;
+                    }
+                } else {
+                    this.radialKey.setFocused(false);
+                }
+            } else {
+                super.keyTyped(typedChar, keyCode);
+            }
         }
     }
 
@@ -246,31 +260,35 @@ public class GuiModifyMacro extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         this.command.mouseClicked(mouseX, mouseY, mouseButton);
+        this.radialKey.mouseClicked(mouseX, mouseY, mouseButton);
 
         if (this.changingKey) {
             this.changingKey = false;
         }
 
-        if (this.btnKeyBinding.mousePressed(mc, mouseX, mouseY)) {
-            this.changingKey = true;
+        if ((this.result.flags&Macro.FLAG_RADIAL) <= 0) {
+            if (this.btnKeyBinding.mousePressed(mc, mouseX, mouseY)) {
+                this.changingKey = true;
+                setKeyText();
+            }
         }
 
-        if (this.commandType.mousePressed(mc, mouseX, mouseY)) {
+        if (this.commandButtonType.mousePressed(mc, mouseX, mouseY)) {
             if((this.result.flags&Macro.FLAG_ONDOWN) > 0) {
                 this.result.flags &= ~Macro.FLAG_ONDOWN;
                 this.result.flags |= Macro.FLAG_ONUP;
 
-                this.commandType.displayString = upText;
+                this.commandButtonType.displayString = upText;
             } else if((this.result.flags&Macro.FLAG_ONUP) > 0) {
                 this.result.flags &= ~Macro.FLAG_ONUP;
                 this.result.flags |= Macro.FLAG_REPEAT_ONDOWN;
 
-                this.commandType.displayString = repeatText;
+                this.commandButtonType.displayString = repeatText;
             } else if((this.result.flags&Macro.FLAG_REPEAT_ONDOWN) > 0) {
                 this.result.flags &= ~Macro.FLAG_REPEAT_ONDOWN;
                 this.result.flags |= Macro.FLAG_ONDOWN;
 
-                this.commandType.displayString = downText;
+                this.commandButtonType.displayString = downText;
             }
         }
 
@@ -291,18 +309,39 @@ public class GuiModifyMacro extends GuiScreen {
             }
         }
 
-
-        if(this.commandActive.mousePressed(mc, mouseX, mouseY)) {
-            this.result.flags ^= Macro.FLAG_ACTIVE;
-            this.commandActive.displayString = (this.result.flags&Macro.FLAG_ACTIVE) > 0 ? enabledText : disabledText;
+        if(this.commandType.mousePressed(mc, mouseX, mouseY)) {
+            if((this.result.flags&Macro.FLAG_RADIAL) > 0) {
+                if(this.existing) {
+                    MacroKey.instance.bindingsRepository.changeMacroKeyCode(this.result, this.result.keyCode, false);
+                } else {
+                    this.result.flags ^= Macro.FLAG_RADIAL;
+                }
+                this.commandType.displayString = keyText;
+                this.commandButtonType.enabled = true;
+                this.commandToggle.enabled = true;
+                this.shiftButton.enabled = true;
+                this.ctrlButton.enabled = true;
+                this.altButton.enabled = true;
+            } else {
+                if(this.existing) {
+                    MacroKey.instance.bindingsRepository.changeMacroRadialKey(this.result, this.result.radialKey, false);
+                } else {
+                    this.result.flags ^= Macro.FLAG_RADIAL;
+                }
+                this.commandType.displayString = radialText;
+                this.commandButtonType.enabled = false;
+                this.commandToggle.enabled = false;
+                this.shiftButton.enabled = false;
+                this.ctrlButton.enabled = false;
+                this.altButton.enabled = false;
+            }
         }
+
         if(this.shiftButton.mousePressed(mc, mouseX, mouseY)) {
             setAltDisplay(this.shiftButton, Macro.FLAG_SHIFT_DOWN);
-        }
-        if(this.ctrlButton.mousePressed(mc, mouseX, mouseY)) {
+        } else if(this.ctrlButton.mousePressed(mc, mouseX, mouseY)) {
             setAltDisplay(this.ctrlButton, Macro.FLAG_CTRL_DOWN);
-        }
-        if(this.altButton.mousePressed(mc, mouseX, mouseY)) {
+        } else if(this.altButton.mousePressed(mc, mouseX, mouseY)) {
             setAltDisplay(this.altButton, Macro.FLAG_ALT_DOWN);
         }
     }
@@ -326,5 +365,27 @@ public class GuiModifyMacro extends GuiScreen {
 
     public void updateScreen() {
         this.command.updateCursorCounter();
+    }
+
+
+    public void setKeyText() {
+        this.btnKeyBinding.displayString = GameSettings.getKeyDisplayString(this.result.keyCode);
+
+        if(this.changingKey) {
+            this.btnKeyBinding.displayString = TextFormatting.WHITE + "> " + TextFormatting.YELLOW + this.btnKeyBinding.displayString + TextFormatting.WHITE + " <";
+        } else {
+            if (this.result.keyCode != 0) {
+                boolean macroKeyCodeModifyFlag = false;
+                for (KeyBinding keybinding : mc.gameSettings.keyBindings) {
+                    if (keybinding.getKeyCode() == this.result.keyCode) {
+                        macroKeyCodeModifyFlag = true;
+                        break;
+                    }
+                }
+                if (macroKeyCodeModifyFlag) {
+                    this.btnKeyBinding.displayString = TextFormatting.GOLD + this.btnKeyBinding.displayString;
+                }
+            }
+        }
     }
 }
