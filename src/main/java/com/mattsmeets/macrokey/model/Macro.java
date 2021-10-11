@@ -73,8 +73,8 @@ public class Macro {
         // from within the GUI, but this caused some weird issues
         String command = this.command;
         if(!command.equals("")) {
-            if(command.startsWith("/radial ")) {
-                String radialKey = command.substring(8);
+            if(command.startsWith("/sneakykey radial ")) {
+                String radialKey = command.substring(18);
                 ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(radialKey);
                 if(macros != null) {
                     Layer layer = instance.bindingsRepository.getActiveLayer(false);

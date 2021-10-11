@@ -265,6 +265,7 @@ public class GuiModifyMacro extends GuiScreen {
 
         if (this.changingKey) {
             this.changingKey = false;
+            setKeyText();
         }
 
         if ((this.result.flags&Macro.FLAG_RADIAL) <= 0) {
