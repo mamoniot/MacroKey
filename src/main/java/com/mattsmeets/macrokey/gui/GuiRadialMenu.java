@@ -162,7 +162,12 @@ public class GuiRadialMenu extends GuiScreen {
             float angle1 = ((i / (float)numberOfSlices) + 0.25f) * 2 * (float) Math.PI;
             float posX = x + itemRadius * (float) Math.cos(angle1);
             float posY = y + itemRadius * (float) Math.sin(angle1);
-            this.drawCenteredString(this.fontRenderer, this.macros.get(i).command, (int)posX, (int)posY - fontRenderer.FONT_HEIGHT / 2, 0xFFFFFFFF);
+            Macro macro = this.macros.get(i);
+            String name = macro.radialName;
+            if(name.length() == 0) {
+                name = macro.command;
+            }
+            this.drawCenteredString(this.fontRenderer, name, (int)posX, (int)posY - fontRenderer.FONT_HEIGHT / 2, 0xFFFFFFFF);
             // this.itemRender.renderItemAndEffectIntoGUI(inSlot, (int) posX, (int) posY);
         }
 

@@ -36,6 +36,7 @@ public class GuiModifyMacro extends GuiScreen {
             AltText = I18n.format("gui.modify.text.alt"),
             radialText = I18n.format("gui.modify.text.trigger.radial"),
             keyText = I18n.format("gui.modify.text.trigger.key"),
+            radialNameText = I18n.format("gui.modify.text.radialname"),
             downText = I18n.format("gui.modify.text.down"),
             upText = I18n.format("gui.modify.text.up"),
             repeatText = I18n.format("gui.modify.text.repeat"),
@@ -47,7 +48,7 @@ public class GuiModifyMacro extends GuiScreen {
     public boolean existing;
     public final Macro result;//NOTE: this macro is only registered if existing = true;
 
-    public GuiTextField command, radialKey;
+    public GuiTextField command, radialKey, radialName;
 
     public GuiButton btnKeyBinding;
     public GuiButton commandType, commandButtonType, commandToggle;
@@ -91,10 +92,13 @@ public class GuiModifyMacro extends GuiScreen {
 
         this.radialKey = new GuiTextField(9, this.fontRenderer, this.width/2 - 75, 100, 150, 20);
         this.radialKey.setMaxStringLength(15);
+        this.radialName = new GuiTextField(9, this.fontRenderer, this.width/2 - 75, 206, 150, 20);
+        this.radialName.setMaxStringLength(55);
 
         if (this.existing) {
             this.command.setText(this.result.command);
             this.radialKey.setText(this.result.radialKey);
+            this.radialName.setText(this.result.radialName);
             setKeyText();
 
             int flags = this.result.flags;
@@ -184,6 +188,8 @@ public class GuiModifyMacro extends GuiScreen {
 
         if((this.result.flags&Macro.FLAG_RADIAL) > 0) {
             this.radialKey.drawTextBox();
+            this.radialName.drawTextBox();
+            this.drawCenteredString(this.fontRenderer, radialNameText, this.width/2, 194, -6250336);
         } else {
             this.btnKeyBinding.drawButton(mc, mouseX, mouseY, 0.0f);
         }
@@ -251,6 +257,17 @@ public class GuiModifyMacro extends GuiScreen {
                 } else {
                     this.radialKey.setFocused(false);
                 }
+            } else if (this.radialName.isFocused()) {
+                if (keyCode == Keyboard.KEY_ESCAPE) this.radialName.setFocused(false);
+
+                this.radialName.textboxKeyTyped(typedChar, keyCode);
+
+                if((this.result.flags&Macro.FLAG_RADIAL) > 0) {
+                    String str = radialName.getText();
+                    this.result.radialName = str;
+                } else {
+                    this.radialName.setFocused(false);
+                }
             } else {
                 super.keyTyped(typedChar, keyCode);
             }
@@ -262,6 +279,7 @@ public class GuiModifyMacro extends GuiScreen {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         this.command.mouseClicked(mouseX, mouseY, mouseButton);
         this.radialKey.mouseClicked(mouseX, mouseY, mouseButton);
+        this.radialName.mouseClicked(mouseX, mouseY, mouseButton);
 
         if (this.changingKey) {
             this.changingKey = false;

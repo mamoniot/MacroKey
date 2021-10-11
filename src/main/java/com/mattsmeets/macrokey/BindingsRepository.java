@@ -386,6 +386,7 @@ public class BindingsRepository {
 					writeString(buffer, macro.umid.toString());
 					writeString(buffer, macro.command);
 					buffer.writeInt(macro.flags);
+					writeString(buffer, macro.radialName);
 				}
 			}
 
@@ -505,6 +506,7 @@ public class BindingsRepository {
 					}
 					macro.flags = buffer.readInt();
 					macro.radialKey = radialKey;
+					macro.radialName = readString(buffer);
 					macro_list.add(macro);
 				}
 				this.radialMacros.put(radialKey, macro_list);

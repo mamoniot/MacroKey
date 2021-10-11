@@ -52,6 +52,7 @@ public class Macro {
 
     public int keyCode = 0;//NOTE: if this macro is saved then only change this value through changeMacroKeyCode
     public String radialKey = "";//NOTE: if this macro is saved then only change this value through changeMacroKeyCode
+    public String radialName = "";
 
     // public Macro() {
     //     this.umid = UUID.randomUUID();

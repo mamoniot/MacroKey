@@ -28,6 +28,7 @@ gui.modify.text.key=Trigger
 
 gui.modify.text.trigger.key=Key
 gui.modify.text.trigger.radial=Radial
+gui.modify.text.radialname=Name
 
 gui.modify.text.type=Key Style
 gui.modify.text.triggertype=Trigger Type
