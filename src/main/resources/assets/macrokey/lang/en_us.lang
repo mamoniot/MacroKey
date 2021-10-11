@@ -1,15 +1,15 @@
 ## Config Strings ##
-macrokey.config.title=MacroKey Keybinding Configuration
+macrokey.config.title=SneakyKeys Keybinding Configuration
 ####
 
 ## Layer translations ##
 text.layer.display=Current Layer: %s
-text.layer.hover.right_click=Right-click to open the MacroKey GUI
+text.layer.hover.right_click=Right-click to open the SneakyKeys GUI
 text.layer.master=Master
 ####
 
 ## GuiMacroManagement ##
-gui.manage.text.title=MacroKey Keybinding
+gui.manage.text.title=SneakyKeys Keybinding
 
 gui.manage.text.macro.add=Add Macro
 
@@ -69,7 +69,7 @@ edit=Edit
 ####
 
 ## Vanilla Controls ##
-key.macrokey.category=MacroKey Keybinding
+key.macrokey.category=SneakyKeys Macro Editor
 key.macrokey.management.desc=Open SneakyKeys Macro Editor
 
 gui.macrokey.open=SneakyKeys Macro Editor

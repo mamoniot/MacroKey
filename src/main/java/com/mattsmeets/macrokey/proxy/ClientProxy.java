@@ -28,7 +28,7 @@ public class ClientProxy extends CommonProxy {
         NetworkRegistry.INSTANCE.registerGuiHandler(instance, new GuiHandler());
 
         ClientCommandHandler.instance.registerCommand(new CommandMacroKey());
-        ClientCommandHandler.instance.registerCommand(new CommandRadial());
+        // ClientCommandHandler.instance.registerCommand(new CommandRadial());
     }
 
     private void registerHooks() {

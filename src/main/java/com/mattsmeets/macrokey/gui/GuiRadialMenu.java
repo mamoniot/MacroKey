@@ -153,15 +153,19 @@ public class GuiRadialMenu extends GuiScreen {
             } else {
                 drawSlice(buffer, x, y, zLevel, radiusIn, radiusOut, s, e, 0, 0, 0, 64);
             }
-            float angle1 = ((i / (float)numberOfSlices) + 0.25f) * 2 * (float) Math.PI;
-            float posX = x + itemRadius * (float) Math.cos(angle1);
-            float posY = y + itemRadius * (float) Math.sin(angle1);
-            drawCenteredString(fontRenderer, this.macros.get(i).command, (int)posX, (int)posY - fontRenderer.FONT_HEIGHT / 2, 0xFFFFFFFF);
-            // this.itemRender.renderItemAndEffectIntoGUI(inSlot, (int) posX, (int) posY);
         }
 
         tessellator.draw();
         GlStateManager.enableTexture2D();
+
+        for (int i = 0; i < numberOfSlices; i++) {
+            float angle1 = ((i / (float)numberOfSlices) + 0.25f) * 2 * (float) Math.PI;
+            float posX = x + itemRadius * (float) Math.cos(angle1);
+            float posY = y + itemRadius * (float) Math.sin(angle1);
+            this.drawCenteredString(this.fontRenderer, this.macros.get(i).command, (int)posX, (int)posY - fontRenderer.FONT_HEIGHT / 2, 0xFFFFFFFF);
+            // this.itemRender.renderItemAndEffectIntoGUI(inSlot, (int) posX, (int) posY);
+        }
+
 
         // if (hasMouseOver && mousedOverItem != null) {
         //     if (!mc.player.getHeldItemMainhand().isEmpty()) {

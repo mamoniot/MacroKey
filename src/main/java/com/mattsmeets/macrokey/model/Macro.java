@@ -1,5 +1,6 @@
 package com.mattsmeets.macrokey.model;
 import com.mattsmeets.macrokey.gui.GuiRadialMenu;
+import com.mattsmeets.macrokey.model.Layer;
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
 import net.minecraft.client.Minecraft;
@@ -76,7 +77,15 @@ public class Macro {
                 String radialKey = command.substring(8);
                 ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(radialKey);
                 if(macros != null) {
-                    Minecraft.getMinecraft().displayGuiScreen(new GuiRadialMenu((ArrayList<Macro>)macros.clone()));
+                    Layer layer = instance.bindingsRepository.getActiveLayer(false);
+
+                    ArrayList<Macro> copy = new ArrayList<Macro>(macros.size());
+                    for(Macro macro : macros) {
+                        if(layer == null || layer.macros.contains(macro.umid)) {
+                            copy.add(macro);
+                        }
+                    }
+                    if(copy.size() > 0) Minecraft.getMinecraft().displayGuiScreen(new GuiRadialMenu(copy));
                 }
             } else {
                 player.sendChatMessage(command);

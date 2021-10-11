@@ -23,13 +23,13 @@ import java.util.Set;
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
 public class KeyInputHandler {
-    private final HashSet<Integer> pressedKeys = new HashSet<>();
-    private final HashSet<Integer> toggleKeys = new HashSet<>();
+    public final HashSet<Integer> pressedKeys = new HashSet<>();
+    public final HashSet<Integer> toggleKeys = new HashSet<>();
 
-    private final ArrayList<Macro> macrosToRun = new ArrayList<Macro>();
-    private final ArrayList<Macro> macrosToRepeat = new ArrayList<Macro>();
+    public final ArrayList<Macro> macrosToRun = new ArrayList<Macro>();
+    public final ArrayList<Macro> macrosToRepeat = new ArrayList<Macro>();
 
-    private int delta = 0;
+    public int delta = 0;
 
 
     @SideOnly(Side.CLIENT)
