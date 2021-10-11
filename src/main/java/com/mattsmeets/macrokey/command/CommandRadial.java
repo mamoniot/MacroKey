@@ -30,7 +30,7 @@ public class CommandRadial extends CommandBase implements ICommand {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "Usage (WIP): /radial [<trigger key>]";
+        return "Usage (only works when bound to a key in SneakyKeys): /radial [<trigger key>]";
     }
 
     @Override
