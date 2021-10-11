@@ -93,7 +93,8 @@ public class GuiModifyMacro extends GuiScreen {
         this.radialKey.setMaxStringLength(15);
 
         if (this.existing) {
-            this.command.setText(this.result.command.toString());
+            this.command.setText(this.result.command);
+            this.radialKey.setText(this.result.radialKey);
             setKeyText();
 
             int flags = this.result.flags;

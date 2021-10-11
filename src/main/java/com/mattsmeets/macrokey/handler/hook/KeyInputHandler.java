@@ -3,6 +3,9 @@ package com.mattsmeets.macrokey.handler.hook;
 import com.mattsmeets.macrokey.config.ModConfig;
 import com.mattsmeets.macrokey.MacroKey;
 import com.mattsmeets.macrokey.model.Macro;
+import com.mattsmeets.macrokey.model.Layer;
+import com.mattsmeets.macrokey.gui.GuiRadialMenu;
+import static com.mattsmeets.macrokey.MacroKey.instance;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -20,9 +23,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.mattsmeets.macrokey.MacroKey.instance;
 
 public class KeyInputHandler {
+    public static String spawnRadial = null;//this is dumb, but java is dumb
+
     public final HashSet<Integer> pressedKeys = new HashSet<>();
     public final HashSet<Integer> toggleKeys = new HashSet<>();
 
@@ -161,6 +165,21 @@ public class KeyInputHandler {
             macro.execute(player);
         }
 
+        if(spawnRadial != null) {
+            ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(spawnRadial);
+            if(macros != null) {
+                Layer layer = instance.bindingsRepository.getActiveLayer(false);
+
+                ArrayList<Macro> copy = new ArrayList<Macro>(macros.size());
+                for(Macro macro : macros) {
+                    if(layer == null || layer.macros.contains(macro.umid)) {
+                        copy.add(macro);
+                    }
+                }
+                if(copy.size() > 0) Minecraft.getMinecraft().displayGuiScreen(new GuiRadialMenu(copy));
+            }
+            spawnRadial = null;
+        }
     }
 
 

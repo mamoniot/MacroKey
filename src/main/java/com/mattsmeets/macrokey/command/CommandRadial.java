@@ -1,8 +1,7 @@
 package com.mattsmeets.macrokey.command;
 
 import com.mattsmeets.macrokey.model.Macro;
-import com.mattsmeets.macrokey.model.Layer;
-import com.mattsmeets.macrokey.gui.GuiRadialMenu;
+import com.mattsmeets.macrokey.handler.hook.KeyInputHandler;
 import static com.mattsmeets.macrokey.MacroKey.instance;
 
 import net.minecraft.client.Minecraft;
@@ -21,8 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class CommandRadial extends CommandBase implements ICommand {
-    // public static final Macro radial = new Macro();
-
     @Override
     public String getName() {
         return "radial";
@@ -30,32 +27,16 @@ public class CommandRadial extends CommandBase implements ICommand {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "Usage (only works when bound to a key in SneakyKeys): /radial [<trigger key>]";
+        return "Usage: /radial [<trigger key>]";
     }
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if (args.length <= 0) {
             sender.sendMessage(new TextComponentString(this.getUsage(sender)));
-
-            return;
         } else {
             String radialKey = args[0];
-            // radial.command = "/radial " + radialKey;
-            // this.macrosToRun.add(macro);
-
-            ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(radialKey);
-            if(macros != null) {
-                Layer layer = instance.bindingsRepository.getActiveLayer(false);
-
-                ArrayList<Macro> copy = new ArrayList<Macro>(macros.size());
-                for(Macro macro : macros) {
-                    if(layer == null || layer.macros.contains(macro.umid)) {
-                        copy.add(macro);
-                    }
-                }
-                if(copy.size() > 0) Minecraft.getMinecraft().displayGuiScreen(new GuiRadialMenu(copy));
-            }
+            KeyInputHandler.spawnRadial = radialKey;
         }
 
     }
