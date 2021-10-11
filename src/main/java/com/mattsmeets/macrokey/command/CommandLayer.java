@@ -53,7 +53,7 @@ public class CommandLayer extends StrippedCommand {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "Usage: /macrokey layer [toggle]";
+        return "Usage: /sneakykey layer [toggle]";
     }
 
     private void printLayerInformation(ICommandSender sender) {
@@ -66,7 +66,7 @@ public class CommandLayer extends StrippedCommand {
             layerDisplayName = activeLayer.displayName;
             countMacroEnabled = activeLayer.macros.size();
         } else {
-            countMacroEnabled = MacroKey.instance.bindingsRepository.getMacros(false).size();
+            countMacroEnabled = MacroKey.instance.bindingsRepository.keyMacros.size() + MacroKey.instance.bindingsRepository.radialMacros.size();
         }
 
         sender.sendMessage(

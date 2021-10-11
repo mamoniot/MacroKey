@@ -19,31 +19,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class CommandRadial extends CommandBase implements ICommand {
-    @Override
-    public String getName() {
-        return "radial";
-    }
+public class CommandRadial extends StrippedCommand {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "Usage: /radial [<trigger key>]";
+        return "Usage: /sneakykey radial [<trigger key>]";
     }
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (args.length <= 0) {
+        if (args.length <= 1) {
             sender.sendMessage(new TextComponentString(this.getUsage(sender)));
         } else {
-            String radialKey = args[0];
+            String radialKey = args[1];
             KeyInputHandler.spawnRadial = radialKey;
         }
 
-    }
-
-    @Override
-    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        return true;
     }
 
     @Override

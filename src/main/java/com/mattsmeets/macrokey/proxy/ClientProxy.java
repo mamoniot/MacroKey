@@ -1,7 +1,6 @@
 package com.mattsmeets.macrokey.proxy;
 
 import com.mattsmeets.macrokey.command.CommandMacroKey;
-import com.mattsmeets.macrokey.command.CommandRadial;
 import com.mattsmeets.macrokey.handler.GuiHandler;
 // import com.mattsmeets.macrokey.handler.hook.ClientTickHandler;
 import com.mattsmeets.macrokey.handler.hook.GuiEventHandler;
@@ -28,7 +27,6 @@ public class ClientProxy extends CommonProxy {
         NetworkRegistry.INSTANCE.registerGuiHandler(instance, new GuiHandler());
 
         ClientCommandHandler.instance.registerCommand(new CommandMacroKey());
-        ClientCommandHandler.instance.registerCommand(new CommandRadial());
     }
 
     private void registerHooks() {

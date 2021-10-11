@@ -23,16 +23,17 @@ public class CommandMacroKey extends CommandBase implements ICommand {
 
         subCommands.put("open", new CommandOpenGUI());
         subCommands.put("layer", new CommandLayer());
+        subCommands.put("radial", new CommandRadial());
     }
 
     @Override
     public String getName() {
-        return "macrokey";
+        return "sneakykey";
     }
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "Usage: /macrokey [open / layer]";
+        return "Usage: /sneakykey [open / layer / radial]";
     }
 
     @Override
@@ -64,8 +65,25 @@ public class CommandMacroKey extends CommandBase implements ICommand {
         }
 
         List<String> list = new ArrayList<String>();
-        list.add("open");
-        list.add("layer");
+        if(args.length >= 1 && args[0].length() > 0) {
+            if("layer".startsWith(args[0])) {
+                list.add("layer");
+                list.add("open");
+                list.add("radial");
+            } else if("radial".startsWith(args[0])) {
+                list.add("radial");
+                list.add("open");
+                list.add("layer");
+            } else {
+                list.add("open");
+                list.add("layer");
+                list.add("radial");
+            }
+        } else {
+            list.add("open");
+            list.add("layer");
+            list.add("radial");
+        }
 
         return list;
     }
