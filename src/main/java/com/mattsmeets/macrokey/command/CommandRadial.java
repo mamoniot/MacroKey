@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class CommandRadial extends CommandBase implements ICommand {
-    public static final Macro radial = new Macro();
+    // public static final Macro radial = new Macro();
 
     @Override
     public String getName() {
@@ -41,8 +41,8 @@ public class CommandRadial extends CommandBase implements ICommand {
             return;
         } else {
             String radialKey = args[0];
-            radial.command = "/radial " + radialKey;
-            this.macrosToRun.add(macro);
+            // radial.command = "/radial " + radialKey;
+            // this.macrosToRun.add(macro);
 
             ArrayList<Macro> macros = instance.bindingsRepository.radialMacros.get(radialKey);
             if(macros != null) {
