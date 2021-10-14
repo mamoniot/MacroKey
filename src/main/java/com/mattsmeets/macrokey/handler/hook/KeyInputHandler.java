@@ -39,6 +39,7 @@ public class KeyInputHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent(priority = EventPriority.NORMAL, receiveCanceled = true)
     public void onKeyInputEvent(InputEvent.KeyInputEvent event) {
+        if(Keyboard.isRepeatEvent()) return;//do nothing on repeat keys when a key is being held down
         int keyCode = Keyboard.getEventKey();
 
         // find if the current key being pressed is the dedicated
