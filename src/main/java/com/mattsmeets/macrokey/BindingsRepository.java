@@ -24,8 +24,8 @@ public class BindingsRepository {
 	private File bindingFile;
 
 	private UUID activeLayer;
-	public HashMap<Integer, ArrayList<Macro>> keyMacros;
-	public HashMap<String, ArrayList<Macro>> radialMacros;
+	public ArrayList<Macro> keyMacros;
+	public ArrayList<Macro> radialMacros;
 	private ArrayList<Layer> layers;
 
 	/**
