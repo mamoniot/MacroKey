@@ -66,7 +66,6 @@ public class GuiRadialMenu extends GuiScreen {
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
         super.mouseReleased(mouseX, mouseY, state);
-        MacroKey.instance.logger.warn("imwc " + state);
 
         if(!closing && (state == 0 || state == 1)) {//debounce and make sure we only respond if the left or right keys are pressed
             if (selectedItem >= 0) {
