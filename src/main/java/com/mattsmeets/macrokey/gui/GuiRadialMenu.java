@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.items.IItemHandler;
 
+import com.mattsmeets.macrokey.MacroKey;
 import com.mattsmeets.macrokey.model.Macro;
 
 @Mod.EventBusSubscriber(Side.CLIENT)
@@ -65,8 +66,9 @@ public class GuiRadialMenu extends GuiScreen {
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
         super.mouseReleased(mouseX, mouseY, state);
+        MacroKey.instance.logger.warn("imwc " + state);
 
-        if(!closing) {
+        if(!closing && (state == 0 || state == 1)) {//debounce and make sure we only respond if the left or right keys are pressed
             if (selectedItem >= 0) {
                 Macro macro = this.macros.get(selectedItem);
                 EntityPlayerSP player = Minecraft.getMinecraft().player;
